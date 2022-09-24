@@ -1,0 +1,346 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: RHD Migration\n"
+"POT-Creation-Date: 2022-09-24 17:48+0530\n"
+"PO-Revision-Date: 2022-09-24 17:48+0530\n"
+"Last-Translator: \n"
+"Language-Team: RHD Team\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.1.1\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-KeywordsList: __;_e\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: admin/class-rhd-admin.php:85 admin/class-rhd-admin.php:854
+msgid "RHD Migration"
+msgstr ""
+
+#: admin/class-rhd-admin.php:99
+msgid ""
+"Please setup the destination website URL from setting page [ Tools -> RHD "
+"Migration ]"
+msgstr ""
+
+#: admin/class-rhd-admin.php:103
+msgid ""
+"Hash key can not be left blank. Please check the setting page [Tools -> RHD "
+"Migration ]"
+msgstr ""
+
+#: admin/class-rhd-admin.php:109 admin/class-rhd-admin.php:800
+msgid "Invalid request. No data found the post/page"
+msgstr ""
+
+#: admin/class-rhd-admin.php:197
+msgid "Invalid request. No response returned from destination website."
+msgstr ""
+
+#: admin/class-rhd-admin.php:203
+msgid ""
+"Please check the RHD plugin is installed on the destination and no extra "
+"authentication is enabled with website."
+msgstr ""
+
+#: admin/class-rhd-admin.php:205
+msgid "No extra authentication should be enabled with destination website."
+msgstr ""
+
+#: admin/class-rhd-admin.php:321
+msgid ""
+"Oops! Post/Page media synchronization is disabled on destination website."
+msgstr ""
+
+#: admin/class-rhd-admin.php:366
+msgid "Page/Post media synchronization is completed."
+msgstr ""
+
+#: admin/class-rhd-admin.php:446
+msgid "Post/Page is created successfully!"
+msgstr ""
+
+#: admin/class-rhd-admin.php:450 admin/class-rhd-admin.php:468
+msgid "Migration completed successfully!"
+msgstr ""
+
+#: admin/class-rhd-admin.php:465
+msgid "Post/Page is updated successfully!"
+msgstr ""
+
+#: admin/class-rhd-admin.php:473
+msgid "Oops! Nothing is added/updated"
+msgstr ""
+
+#: admin/class-rhd-admin.php:565
+msgid "Taxonomies migration is completed."
+msgstr ""
+
+#: admin/class-rhd-admin.php:598
+msgid "Comment migration is completed."
+msgstr ""
+
+#: admin/class-rhd-admin.php:630
+msgid "Featured image set successfully!"
+msgstr ""
+
+#: admin/class-rhd-admin.php:632
+msgid "Unable to set the featured image."
+msgstr ""
+
+#: admin/class-rhd-admin.php:695 admin/class-rhd-admin.php:756
+msgid "Unable to download the image from source website."
+msgstr ""
+
+#: admin/class-rhd-admin.php:701 admin/class-rhd-admin.php:762
+msgid "Unable to write the image on destination website."
+msgstr ""
+
+#: admin/class-rhd-admin.php:718 admin/class-rhd-admin.php:767
+msgid "Unable to create folder path permission issue."
+msgstr ""
+
+#: admin/class-rhd-admin.php:723
+msgid "All post/page media copied successfully!"
+msgstr ""
+
+#: admin/class-rhd-admin.php:771
+msgid "All page/post media copied successfully!"
+msgstr ""
+
+#: admin/class-rhd-admin.php:794 admin/class-rhd-admin.php:798
+#: admin/class-rhd-admin.php:804
+msgid "Invalid request. Please check the configration"
+msgstr ""
+
+#: admin/class-rhd-admin.php:796
+msgid "Invalid request. Please check the destination website configration"
+msgstr ""
+
+#: admin/class-rhd-admin.php:802
+msgid ""
+"Invalid request. Author is not assigned in the destination website "
+"configration."
+msgstr ""
+
+#: admin/class-rhd-admin.php:806
+msgid ""
+"Invalid request. Authentication failure. Please check the hash key provided "
+"in source and destination should be same"
+msgstr ""
+
+#: admin/class-rhd-admin.php:808
+msgid ""
+"Invalid request. Source & Destination URL can not be same in configration."
+msgstr ""
+
+#: admin/class-rhd-admin.php:854
+msgid "Close"
+msgstr ""
+
+#: admin/class-rhd-admin.php:860
+msgid "Yes"
+msgstr ""
+
+#: admin/class-rhd-admin.php:861
+msgid "No"
+msgstr ""
+
+#: admin/class-rhd-admin.php:869
+msgid "Add/Update"
+msgstr ""
+
+#: admin/class-rhd-admin.php:870
+msgid "Add"
+msgstr ""
+
+#: admin/class-rhd-admin.php:871
+msgid "Update"
+msgstr ""
+
+#: admin/class-rhd-admin.php:879
+msgid "Source"
+msgstr ""
+
+#: admin/class-rhd-admin.php:880
+msgid "Destination"
+msgstr ""
+
+#: admin/class-rhd-admin.php:898 admin/class-rhd-admin.php:1036
+msgid "Settings"
+msgstr ""
+
+#: admin/class-rhd-admin.php:951
+msgid ""
+"To Run an extension, REST-API needs to be enabled. Please make sure that "
+"Permalinks should be enable by default. Go to the <b>Options page</b>, click "
+"the <b>Permalinks</b> subtab.This will take you to the page where you can "
+"customize how WordPress generates permalinks for blog posts. If its enabled "
+"still getting an error then please check an error:"
+msgstr ""
+
+#: admin/class-rhd-admin.php:963 admin/class-rhd-admin.php:974
+msgid "RHD Migrate"
+msgstr ""
+
+#: admin/partials/rhd-general.php:44
+msgid "Website"
+msgstr ""
+
+#: admin/partials/rhd-general.php:59
+msgid "Select the source or destination operation that wants to migrate data"
+msgstr ""
+
+#: admin/partials/rhd-general.php:63 admin/partials/rhd-general.php:71
+msgid "Source URL"
+msgstr ""
+
+#: admin/partials/rhd-general.php:66 admin/partials/rhd-general.php:74
+#: admin/partials/rhd-general.php:82 admin/partials/rhd-general.php:90
+#: admin/partials/rhd-general.php:98 admin/partials/rhd-general.php:144
+msgid "Copy"
+msgstr ""
+
+#: admin/partials/rhd-general.php:66 admin/partials/rhd-general.php:74
+#: admin/partials/rhd-general.php:82 admin/partials/rhd-general.php:90
+#: admin/partials/rhd-general.php:98 admin/partials/rhd-general.php:144
+msgid "Copied!"
+msgstr ""
+
+#: admin/partials/rhd-general.php:67
+msgid ""
+"Enter the site URL of the source website in a format like https://www."
+"example.com"
+msgstr ""
+
+#: admin/partials/rhd-general.php:75
+msgid ""
+"Use a URL in the destination website in a format like https://www.example.com"
+msgstr ""
+
+#: admin/partials/rhd-general.php:79
+msgid "Destination URL"
+msgstr ""
+
+#: admin/partials/rhd-general.php:83
+msgid ""
+"Enter a URL of the destination website in a format like https://www.example."
+"com"
+msgstr ""
+
+#: admin/partials/rhd-general.php:87 admin/partials/rhd-general.php:95
+msgid "Hash Key"
+msgstr ""
+
+#: admin/partials/rhd-general.php:91 admin/partials/rhd-general.php:99
+msgid ""
+"It's the key used to authenticate call requests between the source and the "
+"destination website. Please copy it from source website."
+msgstr ""
+
+#: admin/partials/rhd-general.php:103
+msgid "Default Author"
+msgstr ""
+
+#: admin/partials/rhd-general.php:118
+msgid "Default author get assigned for post, page etc.."
+msgstr ""
+
+#: admin/partials/rhd-general.php:122
+msgid "Media Exclude"
+msgstr ""
+
+#: admin/partials/rhd-general.php:137
+msgid ""
+"If you want to exclude images or pdfs etc.. during migration. Means you will "
+"manually move media on destination website."
+msgstr ""
+
+#: admin/partials/rhd-general.php:141
+msgid "Media Extensions Allowed"
+msgstr ""
+
+#: admin/partials/rhd-general.php:145
+msgid ""
+"There will be only allowed file extensions migrated from the source to the "
+"destination website. Multiple values must be separated by commas. Other "
+"resources would need to migrate manually and also absolute media path is "
+"required to migrate."
+msgstr ""
+
+#: admin/partials/rhd-general.php:149
+msgid "Comments"
+msgstr ""
+
+#: admin/partials/rhd-general.php:164
+msgid ""
+"If you want to migrate comments with post/page, select \"Yes\" otherwise \"No"
+"\"."
+msgstr ""
+
+#: admin/partials/rhd-general.php:168
+msgid "Operation"
+msgstr ""
+
+#: admin/partials/rhd-general.php:183
+msgid "Add/Update: If it's not exist then it create and update if exists."
+msgstr ""
+
+#: admin/partials/rhd-general.php:184
+msgid "Add: If it's not exist then it'll create else ignore it."
+msgstr ""
+
+#: admin/partials/rhd-general.php:185
+msgid "Update: If it exists then update else ignore it."
+msgstr ""
+
+#: admin/partials/rhd-general.php:193
+msgid "About this Plugin:"
+msgstr ""
+
+#: admin/partials/rhd-general.php:194
+msgid ""
+"One-click to migrate a page, post, or custom post type from one WordPress to "
+"another WordPress."
+msgstr ""
+
+#: admin/partials/rhd-general.php:195
+msgid ""
+"If you want to migrate post/page content from the stage to the production "
+"server, this plugin will be your best choice."
+msgstr ""
+
+#: admin/partials/rhd-general.php:196
+msgid ""
+"If your client wants to prepare the page in a staging environment and wants "
+"to migrate automatically to production then the plugin will do it easily for "
+"you. It automatically downloads media based on configuration."
+msgstr ""
+
+#: admin/partials/rhd-general.php:197
+msgid "Special Features:"
+msgstr ""
+
+#: admin/partials/rhd-general.php:199
+msgid ""
+"Communicate with WordPress default API. So no special configuration is "
+"needed."
+msgstr ""
+
+#: admin/partials/rhd-general.php:200
+msgid "Download Media Automatically."
+msgstr ""
+
+#: admin/partials/rhd-general.php:201
+msgid "Add/Update post/page data based on configuration"
+msgstr ""
+
+#: admin/partials/rhd-general.php:202
+msgid "RTL Supported"
+msgstr ""
+
+#: admin/partials/rhd-general.php:204
+msgid "More features will be added soon..."
+msgstr ""
