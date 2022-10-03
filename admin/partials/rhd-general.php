@@ -18,7 +18,7 @@ echo $rhd_admin->page_tabs('rhd-migration');
 $rhd_site_url = sanitize_text_field(get_option('rhd_site_url'));
 $rhd_shash_key = sanitize_text_field(get_option('rhd_shash_key'));
 $rhd_dhash_key = sanitize_text_field(get_option('rhd_dhash_key'));
-$rhd_destination_url = sanitize_text_field(get_option('rhd_destination_url'));
+$rhd_destination_url = sanitize_textarea_field(get_option('rhd_destination_url'));
 $rhd_media_exclude = sanitize_text_field(get_option('rhd_media_exclude'));
 $rhd_operation = sanitize_text_field(get_option('rhd_operation'));
 $rhd_website_name = sanitize_text_field(get_option('rhd_website'));
@@ -48,8 +48,8 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
                                 if ( is_array( $rhd_websites ) && count( $rhd_websites ) > 0 ) {
                                   foreach ( $rhd_websites as $rhd_website => $label ) {
                                     ?>
-                                    <option value="<?php echo sanitize_text_field($rhd_website); ?>"<?php selected( $rhd_website, $rhd_website_name ); ?>>
-                                      <?php echo sanitize_text_field($label); ?>
+                                    <option value="<?php echo esc_attr($rhd_website); ?>"<?php selected( $rhd_website, $rhd_website_name ); ?>>
+                                      <?php echo esc_html($label); ?>
                                     </option>
                                     <?php
                                   }
@@ -62,7 +62,7 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
                     <tr valign='top' class=" rhd_destination_section" >
                         <th scope='row'><?php echo esc_html_e( 'Source URL', 'rhd-migration' ); ?></th>
                         <td>
-                            <input type="text" class="large-text" value="<?php echo sanitize_text_field($rhd_site_url); ?>" id="rhd_site_url"   name="rhd_site_url"  >
+                            <input type="text" class="large-text" value="<?php echo esc_html($rhd_site_url); ?>" id="rhd_site_url"   name="rhd_site_url"  >
                             <div class="copy-rhd-element" ><a href="#"><?php echo esc_html_e( 'Copy', 'rhd-migration' ); ?></a><span class="rhd-copied" ><?php echo esc_html_e( 'Copied!', 'rhd-migration' ); ?></span></div>    
                             <div class="rhd-help-text"><?php echo esc_html_e( 'Enter the site URL of the source website in a format like https://www.example.com', 'rhd-migration' ); ?></div>
                         </td>
@@ -70,7 +70,7 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
                     <tr valign='top'  class=" rhd_source_section" >
                         <th scope='row'><?php echo esc_html_e( 'Source URL', 'rhd-migration' ); ?></th>
                         <td> 
-                            <input type="text" class="large-text" value="<?php echo get_site_url(); ?>" id="get_site_url"   name="get_site_url" readonly />
+                            <input type="text" class="large-text" value="<?php echo esc_html(get_site_url()); ?>" id="get_site_url"   name="get_site_url" readonly />
                             <div class="copy-rhd-element" ><a href="#"><?php echo esc_html_e( 'Copy', 'rhd-migration' ); ?></a><span class="rhd-copied" ><?php echo esc_html_e( 'Copied!', 'rhd-migration' ); ?></span></div>    
                             <div class="rhd-help-text"><?php echo esc_html_e( 'Use a URL in the destination website in a format like https://www.example.com', 'rhd-migration' ); ?></div>
                         </td>
@@ -78,23 +78,23 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
                     <tr valign='top'  class=" rhd_source_section" >
                         <th scope='row'><?php echo esc_html_e( 'Destination URL', 'rhd-migration' ); ?></th>
                         <td>
-                            <input type="text" class="large-text"  id="rhd_destination_url" value="<?php echo sanitize_text_field($rhd_destination_url); ?>"   name="rhd_destination_url"  >
-                            <div class="copy-rhd-element" ><a href="#"><?php echo esc_html_e( 'Copy', 'rhd-migration' ); ?></a><span class="rhd-copied" ><?php echo esc_html_e( 'Copied!', 'rhd-migration' ); ?></span></div>   
-                            <div class="rhd-help-text"><?php echo esc_html_e( 'Enter a URL of the destination website in a format like https://www.example.com', 'rhd-migration' ); ?></div>
+                            <textarea  class="large-text"  id="rhd_destination_url"   name="rhd_destination_url" rows="5" cols="10" ><?php echo esc_html($rhd_destination_url); ?></textarea>
+                            <div class="copy-rhd-element"  data-value="textarea" ><a href="#"><?php echo esc_html_e( 'Copy', 'rhd-migration' ); ?></a><span class="rhd-copied" ><?php echo esc_html_e( 'Copied!', 'rhd-migration' ); ?></span></div>   
+                            <div class="rhd-help-text"><?php echo esc_html_e( 'Enter a URL of the destination website in a format like https://www.example.com, if you have multiple destination URL then add in the new line.', 'rhd-migration' ); ?></div>
                         </td>
                     </tr>
                     <tr valign='top'  class=" rhd_source_section" >
                         <th scope='row'><?php echo esc_html_e( 'Hash Key' , 'rhd-migration'); ?></th>
                         <td>
-                            <input type="text" class="large-text" value="<?php echo sanitize_text_field($rhd_shash_key); ?>" id="rhd_shash_key"   name="rhd_shash_key"  >
-                            <div class="copy-rhd-element" ><a href="#"><?php echo esc_html_e( 'Copy', 'rhd-migration' ); ?></a><span class="rhd-copied" ><?php echo esc_html_e( 'Copied!', 'rhd-migration' ); ?></span></div>
+                            <input type="text" class="large-text" value="<?php echo esc_html($rhd_shash_key); ?>" id="rhd_shash_key"   name="rhd_shash_key"  >
+                            <div class="copy-rhd-element" ><a href="#" ><?php echo esc_html_e( 'Copy', 'rhd-migration' ); ?></a><span class="rhd-copied" ><?php echo esc_html_e( 'Copied!', 'rhd-migration' ); ?></span></div>
                             <div class="rhd-help-text"><?php echo esc_html_e( "It's the key used to authenticate call requests between the source and the destination website. Please copy it from source website." , 'rhd-migration' ); ?></div>
                         </td>
                     </tr>
                     <tr valign='top'  class=" rhd_destination_section" >
                         <th scope='row'><?php echo esc_html_e( 'Hash Key' , 'rhd-migration'); ?></th>
                         <td>
-                            <input type="text" class="large-text" value="<?php echo sanitize_text_field($rhd_dhash_key); ?>" id="rhd_dhash_key"   name="rhd_dhash_key"  >
+                            <input type="text" class="large-text" value="<?php echo esc_html($rhd_dhash_key); ?>" id="rhd_dhash_key"   name="rhd_dhash_key"  >
                             <div class="copy-rhd-element" ><a href="#"><?php echo esc_html_e( 'Copy', 'rhd-migration' ); ?></a><span class="rhd-copied" ><?php echo esc_html_e( 'Copied!', 'rhd-migration' ); ?></span></div>
                             <div class="rhd-help-text"><?php echo esc_html_e( "It's the key used to authenticate call requests between the source and the destination website. Please copy it from source website." , 'rhd-migration' ); ?></div>
                         </td>
@@ -107,8 +107,8 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
                                 if ( is_array( $rhd_authors ) && count( $rhd_authors ) > 0 ) {
                                   foreach ( $rhd_authors as $rhd_author => $label ) {
                                     ?>
-                                    <option value="<?php echo sanitize_text_field($rhd_author); ?>"<?php selected( $rhd_author, $rhd_author_selected ); ?>>
-                                      <?php echo sanitize_text_field($label); ?>
+                                    <option value="<?php echo esc_attr($rhd_author); ?>"<?php selected( $rhd_author, $rhd_author_selected ); ?>>
+                                      <?php echo esc_html($label); ?>
                                     </option>
                                     <?php
                                   }
@@ -126,8 +126,8 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
                                 if ( is_array( $rhd_medias ) && count( $rhd_medias ) > 0 ) {
                                   foreach ( $rhd_medias as $rhd_media => $label ) {
                                     ?>
-                                    <option value="<?php echo sanitize_text_field($rhd_media); ?>"<?php selected( $rhd_media, $rhd_media_exclude ); ?>>
-                                      <?php echo sanitize_text_field($label); ?>
+                                    <option value="<?php echo esc_attr($rhd_media); ?>"<?php selected( $rhd_media, $rhd_media_exclude ); ?>>
+                                      <?php echo esc_html($label); ?>
                                     </option>
                                     <?php
                                   }
@@ -140,7 +140,7 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
                     <tr valign='top'  class=" rhd_destination_section" >
                         <th scope='row'><?php echo esc_html_e( 'Media Extensions Allowed' , 'rhd-migration'); ?></th>
                         <td>
-                            <input type="text" class="large-text" value="<?php echo $rhd_media_ext; ?>" id="rhd_media_ext"   name="rhd_media_ext"  />
+                            <input type="text" class="large-text" value="<?php echo esc_html($rhd_media_ext); ?>" id="rhd_media_ext"   name="rhd_media_ext"  />
                             <div class="copy-rhd-element" ><a href="#"><?php echo esc_html_e( 'Copy', 'rhd-migration' ); ?></a><span class="rhd-copied" ><?php echo esc_html_e( 'Copied!', 'rhd-migration' ); ?></span></div>
                             <div class="rhd-help-text"><?php echo esc_html_e( "There will be only allowed file extensions migrated from the source to the destination website. Multiple values must be separated by commas. Other resources would need to migrate manually and also absolute media path is required to migrate." , 'rhd-migration' ); ?></div>
                         </td>
@@ -153,8 +153,8 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
                                 if ( is_array( $rhd_medias ) && count( $rhd_medias ) > 0 ) {
                                   foreach ( $rhd_medias as $rhd_media => $label ) {
                                     ?>
-                                    <option value="<?php echo sanitize_text_field($rhd_media); ?>"<?php selected( $rhd_media, $rhd_comment_selected ); ?>>
-                                      <?php echo sanitize_text_field($label); ?>
+                                    <option value="<?php echo esc_attr($rhd_media); ?>"<?php selected( $rhd_media, $rhd_comment_selected ); ?>>
+                                      <?php echo esc_html($label); ?>
                                     </option>
                                     <?php
                                   }
@@ -172,8 +172,8 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
                                 if ( is_array( $rhd_operations ) && count( $rhd_operations ) > 0 ) {
                                   foreach ( $rhd_operations as $operation => $label ) {
                                     ?>
-                                    <option value="<?php echo sanitize_text_field($operation); ?>"<?php selected( $operation, $rhd_operation ); ?>>
-                                      <?php echo sanitize_text_field($label); ?>
+                                    <option value="<?php echo esc_attr($operation); ?>"<?php selected( $operation, $rhd_operation ); ?>>
+                                      <?php echo esc_html($label); ?>
                                     </option>
                                     <?php
                                   }
@@ -198,8 +198,11 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
             <ul class="rhd-help-doc">
               <li><?php echo esc_html_e( "Communicate with WordPress default API. So no special configuration is needed.", 'rhd-migration' ); ?></li>
               <li><?php echo esc_html_e( "Download Media Automatically.", 'rhd-migration' ); ?></li>
+              <li><?php echo esc_html_e( "Multiple Destination URL Support.", 'rhd-migration' ); ?></li>
               <li><?php echo esc_html_e( "Add/Update post/page data based on configuration", 'rhd-migration' ); ?></li>
-              <li><?php echo esc_html_e( "RTL Supported", 'rhd-migration' ); ?></li>              
+              <li><?php echo esc_html_e( "RTL Supported", 'rhd-migration' ); ?></li>        
+              <li><?php echo esc_html_e( "Comment migratation support", 'rhd-migration' ); ?></li>    
+              <li><?php echo esc_html_e( "Media exclude support", 'rhd-migration' ); ?></li>            
             </ul>
             <p><strong><?php echo esc_html_e( "More features will be added soon...", 'rhd-migration' ); ?></strong></p> 
   </div>

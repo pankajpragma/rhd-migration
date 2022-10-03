@@ -82,35 +82,34 @@ class RHD_Admin
 
     public function menu()
     {
-        add_management_page(__('RHD Migration', 'rhd-migration'), __('RHD Migration', 'rhd-migration'), 'manage_options', 'rhd-migration', 'rhd_migration');
+        add_management_page(esc_html__('RHD Migration', 'rhd-migration'), esc_html__('RHD Migration', 'rhd-migration'), 'manage_options', 'rhd-migration', 'rhd_migration');
         add_action('admin_init', 'rhd_settings');
     }
 
     public function load_rhd_log()
     {
         global $wpdb;
-        $id    = $this->filterIntData('id');
-        $type    = $this->filterTextData('type');
+        $id    = $this->filterIntData('id'); 
         $image    = $this->filterIntData('image');
+        $localhost    = $this->filterIntData('localhost');
+        $overwrite    = $this->filterIntData('overwrite');
+        $exclude    = $this->filterIntData('exclude');
+        $rhd_destination_url  = sanitize_text_field($this->filterTextData('destination'));
+
         $rhd_hash_key = sanitize_text_field(get_option('rhd_shash_key'));
-        $rhd_destination_url = sanitize_text_field(get_option('rhd_destination_url'));
         $rhd_comment = sanitize_text_field(get_option('rhd_comment'));
-        if (empty($rhd_destination_url)) {
-            $result = array('error' => 0, 'message' => __("Please setup the destination website URL from setting page [ Tools -> RHD Migration ]", 'rhd-migration'));
-            $this->json_return($result);
+        $source_url = site_url();
+        if (empty($rhd_destination_url)) { 
+            $this->json_error_return(esc_html__("Please setup the destination website URL from setting page [ Tools -> RHD Migration ]", 'rhd-migration'));
         }
         if (empty($rhd_hash_key)) {
-            $result = array('error' => 0, 'message' => __("Hash key can not be left blank. Please check the setting page [Tools -> RHD Migration ]", 'rhd-migration'));
-            $this->json_return($result);
+            $this->json_error_return(esc_html__("Hash key can not be left blank. Please check the setting page [Tools -> RHD Migration ]"), 'rhd-migration');
         }
-        $source_url = site_url();
         $post_data = get_post($id);
         if (empty($id) || empty($post_data)) {
-            $result = array('error' => 0, 'message' => __("Invalid request. No data found the post/page", 'rhd-migration'));
-            $this->json_return($result);
+            $this->json_error_return(esc_html__("Invalid request. No data found the post/page"), 'rhd-migration');
         }
         $post_meta = get_post_meta($id);
-        
         $author_id = $post_data->post_author;
         $display_name = get_the_author_meta('user_nicename', $author_id);
         $post_parent = $post_data->post_parent;
@@ -120,8 +119,10 @@ class RHD_Admin
             $parent_post_name = $parent_post->post_name;
         }
         $body = array("source_url" => $source_url, "hash_key" => $rhd_hash_key, "user_id" => get_current_user_id(), 'post_data' => $post_data, 'destination' => $rhd_destination_url, 'post_meta' => $post_meta, 'display_name' => $display_name, 'parent_post_name' => $parent_post_name);
+        $body['overwrite'] = $overwrite;
+        $body['localhost'] = $localhost;
         $image_upload = 0;
-        if ($image) {
+        if ($image && !$exclude) {
             $attachments = get_children(array(
                 'post_parent' => $id,
                 'post_type' => 'attachment',
@@ -132,6 +133,10 @@ class RHD_Admin
             $i = 0;
             foreach ($attachments as $att_id => $attachment) {
                 $attachment->image_url = wp_get_attachment_url($attachment->ID);
+                if($localhost)
+                {
+                    $attachment->image_base64 = base64_encode(file_get_contents($attachment->image_url));
+                }
                 $attach_meta = get_post_meta($attachment->ID);
                 $images[$i]['data'] =  $attachment;
                 $images[$i]['meta'] =  $attach_meta;
@@ -141,20 +146,49 @@ class RHD_Admin
             if ($thumbnail_id) {
                 $p = get_post($thumbnail_id);
                 $p->image_url = wp_get_attachment_url($thumbnail_id);
+                if($localhost)
+                {
+                    $p->image_base64 = base64_encode(file_get_contents($p->image_url));
+                }
                 $attach_meta = get_post_meta($thumbnail_id);
                 $images[$i]['data'] =  $p;
                 $images[$i]['meta'] =  $attach_meta;
                 $i++;
             }
+            $base64_images = Array();
+            if($localhost)
+            {                
+                $found_images = Array();
+                foreach ($post_data as $post_key => $post_value) {
+                    $this->getResourceUrls($post_value, $found_images);
+                }
+                foreach ($post_meta as $meta_key => $meta_value) {
+                    if (is_array($meta_value)) {
+                        foreach ($meta_value as $value) {
+                            $this->getResourceUrls($value, $found_images);
+                        }
+                    } else {
+                        $value = $this->getResourceUrls($value, $found_images);
+                    }
+                }
+                $found_images = array_filter(array_unique($found_images));
+                foreach ($found_images as $image) {
+                    if($this->isImageDestinationURL($image))
+                    {
+                        $base64_images[$image] = base64_encode(file_get_contents($image));
+                    }
+                }                
+            }
             $body['images'] = $images;
+            $body['base64_images'] = $base64_images;
             $body = json_encode($body);
-
             # API CALL for Image Upload
             $remote_request = new WordPressRemoteJSON($this->cleanRHDURL($rhd_destination_url) . '/wp-json/rhd/v1/rhd_image_call_request/', array(
                 'body' => $body
             ), "post");
             $remote_request->run();
             $response_data = $remote_request->get_body();
+
         } else {
             # Comments
             $comments = [];
@@ -184,31 +218,63 @@ class RHD_Admin
         }
 
         if ($remote_request->is_success()) {
-            $response_data = $remote_request->get_body();
+            $response_data = $remote_request->get_body(); 
             $output = json_decode($response_data, true);
             if (!empty($output) && isset($output['message']) && is_array($output['message'])) {
-                $response =  "";
-                foreach ($output['message'] as $message) {
-                    $response .=  $message;
+                $error = !$output['status'];
+                if(!$error)
+                {
+                    
+                    if ($image && !$exclude)
+                    {
+                        $response =  "<ul class='rhd-image-section' id='image_section_".$id."' >";
+                    }
+                    else
+                    {
+                        $response =  "<ul class='rhd-post-section'  id='post_image_".$id."' >";
+                        $response .=  "<li><a class='rhd-page-title'  >".esc_html__('Post/Page Title: ', 'rhd-migration'). esc_html($post_data->post_title)."</a></li>";
+                    }
+                    foreach ($output['message'] as $message) {
+                        $response .=  "<li><a class='rhd-message' >".$message."</a></li>";
+                    }
+                    $response .=  "</ul>";
+                    if(isset($output['image_opr']) && $output['image_opr'])
+                    {
+                        $image_upload = 1;
+                    }
+                    if($exclude)
+                    {
+                        $image_upload = 0;
+                    }                    
                 }
-                $error = $output['status'];
-                $image_upload = 1;
+                else{
+                    $response = "";
+                    foreach ($output['message'] as $message) {
+                        $response .=  $message;
+                    }
+                }
             } else {
-                $response = '<div class="rhd-status-msg rhd-error-label" >' . __("Invalid request. No response returned from destination website.", 'rhd-migration') . '</div>';
+                $response = esc_html__("Invalid request. No response returned from destination website.", 'rhd-migration');
                 $error = $output['status'];
             }
         } else {
             $msg = $remote_request->get_response_message();
             if ($msg == 'Not Found') {
-                $msg = __('Please check the RHD plugin is installed on the destination and no extra authentication is enabled with website.', 'rhd-migration');
+                $msg = 'Please check the RHD plugin is installed on the destination and no extra authentication is enabled with website.';
             } else if ($msg == 'Unauthorized') {
-                $msg = __('No extra authentication should be enabled with destination website.', 'rhd-migration');
-            }
-            $response = '<div class="rhd-status-msg rhd-error-label" >' . $msg . '</div>';
-            $error = 0;
+                $msg = 'No extra authentication should be enabled with destination website.';
+            } 
+            $response = esc_html__($msg, 'rhd-migration');
+            $error = 1;
         }
-        $result = array('status' => $error, 'message' => $response, 'image_upload' => $image_upload);
-        $this->json_return($result);
+
+        if($error)
+        {
+            $this->json_error_return($response);
+        }
+        else{
+            $this->json_success_return($response, $image_upload);
+        }        
     }
 
 
@@ -236,6 +302,14 @@ class RHD_Admin
                 'sanitize_callback' => 'sanitize_text_field',
             ),
             'parent_post_name' => array(
+                'default' => "",
+                'sanitize_callback' => 'sanitize_text_field',
+            ),
+            'localhost' => array(
+                'default' => "",
+                'sanitize_callback' => 'sanitize_text_field',
+            ),
+            'overwrite' => array(
                 'default' => "",
                 'sanitize_callback' => 'sanitize_text_field',
             ),
@@ -304,21 +378,25 @@ class RHD_Admin
         $status = $this->isValidRequest($request);
         if ($status !== true) {
             $response['status'] = false;
-            $response['message'] = array('<div class="rhd-status-msg rhd-error-label" >' . $status . '</div>');
+            $response['message'] = array($status);
         } else {
             $body = json_decode($request->get_body(), true);
             $post_data = isset($body['post_data']) ? $body['post_data'] : '';
             $post_metas  = isset($body['post_meta']) ? $body['post_meta'] : '';
             $images  = isset($body['images']) ? $body['images'] : '';
+            $base64_images  = isset($body['base64_images']) ? $body['base64_images'] : '';
             $post_name = sanitize_text_field($post_data['post_name']);
+
+            $overwrite = sanitize_text_field($body['overwrite']);
+            $localhost = sanitize_text_field($body['localhost']);
+
             $old_post_id = absint($post_data['ID']);
             $post_type = sanitize_text_field($post_data['post_type']);
-            $operation = sanitize_text_field(get_option('rhd_operation'));
             $media = sanitize_text_field(get_option('rhd_media_exclude'));
 
             if ($media == "yes") {
                 $response['status'] = false;
-                $response['message'] = array('<div class="rhd-status-msg rhd-error-label" >' . __("Oops! Post/Page media synchronization is disabled on destination website.", "rhd") . '</div>');
+                $response['message'] = array(esc_html__("Oops! Post/Page media synchronization is disabled on destination website.", "rhd"));
             } else {
                 $rhd_author = absint(get_option('rhd_author'));
                 $display_name = sanitize_text_field($body['display_name']);
@@ -326,19 +404,18 @@ class RHD_Admin
                 if (!empty($the_user)) {
                     $rhd_author = absint($the_user->ID);
                 }
-
                 $message = [];
                 $found_images = array();
                 $found_post_id = $this->getPostId($post_name, $post_type, $old_post_id);
-
                 if (!function_exists('wp_read_video_metadata')) {
                     require_once(ABSPATH . 'wp-admin/includes/media.php');
                 }
                 if (!function_exists('wp_crop_image')) {
                     require_once(ABSPATH . 'wp-admin/includes/image.php');
                 }
+
                 # Add Media like Featured Image etc..
-                $this->uploadAllMedia($found_post_id, $images, $message, $rhd_author);
+                $this->uploadAllMedia($found_post_id, $images, $message, $rhd_author, $overwrite, $localhost);
 
                 foreach ($post_data as $post_key => $post_value) {
                     $this->getResourceUrls($post_value, $found_images);
@@ -355,15 +432,20 @@ class RHD_Admin
                 $found_images = array_filter(array_unique($found_images));
 
                 # Add Media Within Content
-                $this->uploadAllContentMedia($found_post_id, $found_images, $message, $rhd_author);
+                $this->uploadAllContentMedia($found_post_id, $found_images, $message, $rhd_author, $overwrite, $localhost, $base64_images);
 
                 $this->uploadThumbnail($found_post_id, $post_metas, $message);
 
-
                 $response['status'] = false;
+
                 if(count($found_images) || count($images))
                 {
-                    $message[] = '<div class="rhd-status-msg rhd-success-label" >' . __("Page/Post media synchronization is completed.", "rhd") . '</div>';
+                    $response['status'] = true;
+                    $message[] = esc_html__("Page/Post media synchronization is completed.", "rhd");
+                }
+                else{
+                    $response['status'] = false;
+                    $message[] = esc_html__("No media found to synchronize.", "rhd");
                 }
                 $response['message'] = $message;
             }
@@ -387,7 +469,8 @@ class RHD_Admin
         $status = $this->isValidRequest($request);
         if ($status !== true) {
             $response['status'] = false;
-            $response['message'] = array('<div class="rhd-status-msg rhd-error-label" >' . $status . '</div>');
+            $response['message'] = array($status);
+            $response['image_opr'] = 0;
         } else {
             $rhd_author = absint(get_option('rhd_author'));
             $body = json_decode($request->get_body(), true);
@@ -407,9 +490,7 @@ class RHD_Admin
             if (!empty($the_user)) {
                 $rhd_author = absint($the_user->ID);
             }
-
             $found_post_id = $this->getPostId($post_name, $post_type, $old_post_id);
-
             $post_args = array();
             $post_args['ID'] = $found_post_id;
             foreach ($post_data as $post_key => $post_value) {
@@ -441,15 +522,17 @@ class RHD_Admin
                 if (is_wp_error($postId)) {
                     $response['status'] = false;
                     $response['message'] = array($postId->get_error_message());
+                    $response['image_opr'] = 0;
                 } else {
 
-                    $message = array('<div class="rhd-status-msg rhd-success-label" >' . __('Post/Page is created successfully!', 'rhd-migration') . '</div>');
+                    $message = array(esc_html__('Post/Page is created successfully!', 'rhd-migration'));
                     $this->addPostMeta($postId, $meta_inputs, $message, $old_post_id, $post_type);
                     $this->addTaxonomies($postId, $taxonomies, $message);
                     $this->addComments($postId, $comments, $message);
-                    $message[] = '<div class="rhd-status-msg rhd-success-label" >' . __('Migration completed successfully!', 'rhd-migration') . '</div>';
+                    $message[] = esc_html__('Migration completed successfully!', 'rhd-migration');
                     $response['status'] = true;
                     $response['message'] = $message;
+                    $response['image_opr'] =  1;
                 }
             } else if (in_array($operation, array('update', 'add_update'))) {
                 $post_args['ID'] = $found_post_id;
@@ -459,20 +542,23 @@ class RHD_Admin
                 if (is_wp_error($post_id)) {
                     $response['status'] = false;
                     $response['message'] = array($post_id->get_error_message());
+                    $response['image_opr'] = 0;
                 } else {
                     $postId = $post_args['ID'];
                     # Add comments
-                    $message = array('<div class="rhd-status-msg rhd-success-label" >' . __('Post/Page is updated successfully!', 'rhd-migration') . '</div>');
+                    $message = array(esc_html__('Post/Page is updated successfully!', 'rhd-migration'));
                     $this->addPostMeta($postId, $meta_inputs, $message, $old_post_id, $post_type);
                     $this->addTaxonomies($postId, $taxonomies, $message);
-                    $message[] = '<div class="rhd-status-msg rhd-success-label" >' . __('Migration completed successfully!', 'rhd-migration') . '</div>';
+                    $message[] = esc_html__('Migration completed successfully!', 'rhd-migration');
                     $response['status'] = true;
                     $response['message'] = $message;
+                    $response['image_opr'] = 1;
                 }
             } else {
-                $message[] = '<div class="rhd-status-msg rhd-success-label" >' . __('Oops! Nothing is added/updated', 'rhd-migration') . '</div>';
+                $message[] = esc_html__('Oops! Nothing is added/updated', 'rhd-migration');
                 $response['status'] = true;
                 $response['message'] = $message;
+                $response['image_opr'] = 0;
             }
         }
 
@@ -534,14 +620,14 @@ class RHD_Admin
                     $value = $this->replaceUrlContent($value);
                     $post_meta_id = add_post_meta($postId, $meta_key, maybe_unserialize($value));
                     if (is_wp_error($post_meta_id)) {
-                        $message[] = '<div class="rhd-status-msg rhd-error-label" >' . $post_meta_id->get_error_message() . '</div>';
+                        $message[] = $post_meta_id->get_error_message();
                     }
                 }
             } else {
                 $value = $this->replaceUrlContent($value);
                 $post_meta_id = add_post_meta($postId, $meta_key, maybe_unserialize($meta_value));
                 if (is_wp_error($post_meta_id)) {
-                    $message[] = '<div class="rhd-status-msg rhd-error-label" >' . $post_meta_id->get_error_message() . '</div>';
+                    $message[] = $post_meta_id->get_error_message();
                 }
             }
         }
@@ -556,13 +642,13 @@ class RHD_Admin
         foreach ($taxonomies as $taxonomie) {
             $term_taxonomy_ids = wp_set_object_terms($postId, $taxonomie[0], $taxonomie[1], false);
             if (is_wp_error($term_taxonomy_ids)) {
-                $message[] = '<div class="rhd-status-msg rhd-error-label" >' . $term_taxonomy_ids->get_error_message() . '</div>';
+                $message[] = $term_taxonomy_ids->get_error_message();
             } else {
                 // Success! These taxonomies were added to the post.
 
             }
         }
-        $message[] =  '<div class="rhd-status-msg rhd-success-label" >' . __('Taxonomies migration is completed.', 'rhd-migration') . '</div>';
+        $message[] = esc_html__('Taxonomies migration is completed.', 'rhd-migration');
     }
 
     function addComments($postId, $taxonomies, &$message)
@@ -589,13 +675,13 @@ class RHD_Admin
             );
             $comment_id = wp_insert_comment($data);
             if (is_wp_error($comment_id)) {
-                $message[] = '<div class="rhd-status-msg rhd-error-label" >' . $comment_id->get_error_message() . '</div>';
+                $message[] = $comment_id->get_error_message();
             } else {
                 // Success! These comments were added to the post.
 
             }
         }
-        $message[] =  '<div class="rhd-status-msg rhd-success-label" >' . __('Comment migration is completed.', 'rhd-migration') . '</div>';
+        $message[] =  esc_html__('Comment migration is completed.', 'rhd-migration');
     }
 
     function uploadThumbnail($postId, $post_metas, &$message)
@@ -627,15 +713,15 @@ class RHD_Admin
                 }
                 if ($found_post_id) {
                     set_post_thumbnail($postId, $found_post_id);
-                    $message['image_error'] = '<div class="rhd-status-msg rhd-success-label" >' . __('Featured image set successfully!', 'rhd-migration') . '</div>';
+                    $message['image_error'] =  esc_html__('Featured image set successfully!', 'rhd-migration');
                 } else {
-                    $message['image_error'] = '<div class="rhd-status-msg rhd-error-label" >' . __('Unable to set the featured image.', 'rhd-migration') . '</div>';
+                    $message['image_error'] = esc_html__('Unable to set the featured image.', 'rhd-migration');
                 }
             }
         }
     }
 
-    function uploadAllMedia($postId, $images, &$message, $rhd_author)
+    function uploadAllMedia($postId, $images, &$message, $rhd_author, $overwrite, $localhost)
     {
         if (empty($images) || empty($postId)) {
             return false;
@@ -658,9 +744,12 @@ class RHD_Admin
             if (!in_array($extension, $exts)) {
                 continue;
             }
+
             $r_image_url = $this->replaceUrlImageContent($image_url);
+
             $p = parse_url($r_image_url);
             $image_path = $this->cleanRHDURL(ABSPATH) . $p['path'];
+
             $filename = basename($image_url);
             $upload_dir = dirname($image_path);
             if (wp_mkdir_p($upload_dir)) {
@@ -690,21 +779,38 @@ class RHD_Admin
                     unset($attachment_data['post_author']);
                 }
                 $file = $upload_dir . '/' . $filename;
-                $image_data = $this->getResourceContent($image_url);
+
+                # Avoid Overwrite
+                if(file_exists($file) && !$overwrite)
+                {
+                    continue;
+                }
+
+                if($localhost)
+                {
+                    $image_data =  base64_decode($image['image_base64']);
+                }
+                else
+                {
+                    $image_data = $this->getResourceContent($image_url);
+                }
+                
                 if (empty($image_data)) {
-                    $message['image_error'] = '<div class="rhd-status-msg rhd-error-label" >' . __('Unable to download the image from source website.', 'rhd-migration') . '</div>';
+                    $message['image_error'] = esc_html__('Unable to download the image from source website.', 'rhd-migration');
                     $is_error = 1;
                     continue;
                 }
+
                 file_put_contents($file, $image_data);
+
                 if (!file_exists($file)) {
-                    $message['image_error'] = '<div class="rhd-status-msg rhd-error-label" >' . __('Unable to write the image on destination website.', 'rhd-migration') . '</div>';
+                    $message['image_error'] = esc_html__('Unable to write the image on destination website.', 'rhd-migration');
                     $is_error = 1;
                 }
                 // Insert the attachment.
                 $attach_id = wp_insert_attachment($attachment_data, $file, $parent_id);
                 if (is_wp_error($attach_id)) {
-                    $message['attachment_error'] = '<div class="rhd-status-msg rhd-error-label" >' . $attach_id->get_error_message() . '</div>';
+                    $message['attachment_error'] = $attach_id->get_error_message();
                     $is_error = 1;
                 } else {
                     $this->update_rhd_posts_meta($post_type, $old_post_id, $attach_id);
@@ -715,21 +821,22 @@ class RHD_Admin
                 }
             } else {
                 $is_error = 1;
-                $message['attachment_folder'] =  '<div class="rhd-status-msg rhd-success-label" >' . __('Unable to create folder path permission issue.', 'rhd-migration') . '</div>';
+                $message['attachment_folder'] = esc_html__('Unable to create folder path permission issue.', 'rhd-migration');
             }
         }
 
         if (!$is_error) {
-            $message['attachment_success'] =  '<div class="rhd-status-msg rhd-success-label" >' . __('All post/page media copied successfully!', 'rhd-migration') . '</div>';
+            $message['attachment_success'] =  esc_html__('All post/page media copied successfully!', 'rhd-migration');
         }
     }
 
-    function uploadAllContentMedia($postId, $images, &$message, $rhd_author)
+    function uploadAllContentMedia($postId, $images, &$message, $rhd_author, $overwrite, $localhost, $base64_images)
     {
         if (empty($images) || empty($postId)) {
             return false;
         }
         $exts = $this->getResourceExtensions();
+        $rhd_site_url = sanitize_text_field(get_option('rhd_site_url'));
         $is_error = 0;
         // Get upload dir
         $root_path = ABSPATH;
@@ -737,7 +844,7 @@ class RHD_Admin
             $path_info = pathinfo($image_url);
             $extension = isset($path_info['extension']) ? $path_info['extension'] : '';
             $r_image_url = $this->replaceUrlContent($image_url);
-            if (!in_array($extension, $exts) || !$this->isDestinationURL($r_image_url)) {
+            if (!in_array($extension, $exts) || !$this->isImageDestinationURL($r_image_url)) {
                 continue;
             }
             $r_image_url = $this->replaceUrlImageContent($image_url);
@@ -747,30 +854,44 @@ class RHD_Admin
             $upload_dir = dirname($image_path);
             if (wp_mkdir_p($upload_dir)) {
                 $file = $upload_dir . '/' . $filename;
-                if (file_exists($file)) {
+                if (file_exists($file)  && !$overwrite ) {
                     continue;
                 }
-
-                $image_data = $this->getResourceContent($image_url);
+                if($localhost)
+                {
+                    $image_data = $base64_images[$image_url];
+                }
+                else
+                {
+                    if(!$this->isAbsolute($image_url))
+                    {
+                        $image_url  = $rhd_site_url.$image_url;
+                    }
+                    $image_data = $this->getResourceContent($image_url);
+                }                
                 if (empty($image_data)) {
-                    $message['image_error'] = '<div class="rhd-status-msg rhd-error-label" >' . __('Unable to download the image from source website.', 'rhd-migration') . '</div>';
+                    $message['image_error'] = esc_html__('Unable to download the image from source website.', 'rhd-migration');
                     $is_error = 1;
                     continue;
-                }
+                }                
                 file_put_contents($file, $image_data);
                 if (!file_exists($file)) {
-                    $message['image_error'] = '<div class="rhd-status-msg rhd-error-label" >' . __('Unable to write the image on destination website.', 'rhd-migration') . '</div>';
+                    $message['image_error'] = esc_html__('Unable to write the image on destination website.', 'rhd-migration');
                     $is_error = 1;
                 }
             } else {
                 $is_error = 1;
-                $message['attachment_folder'] =  '<div class="rhd-status-msg rhd-success-label" >' . __('Unable to create folder path permission issue.', 'rhd-migration') . '</div>';
+                $message['attachment_folder'] = esc_html__('Unable to create folder path permission issue.', 'rhd-migration');
             }
         }
         if (!$is_error) {
-            $message['attachment_success'] =  '<div class="rhd-status-msg rhd-success-label" >' . __('All page/post media copied successfully!', 'rhd-migration') . '</div>';
+            $message['attachment_success'] = esc_html__('All page/post media copied successfully!', 'rhd-migration');
         }
     }
+
+    function isAbsolute($url) {
+        return isset(parse_url($url)['host']);
+      }
 
     function isValidRequest($request)
     {
@@ -780,7 +901,6 @@ class RHD_Admin
         $rhd_hash_key = sanitize_text_field(get_option('rhd_dhash_key'));
         $rhd_website = sanitize_text_field(get_option('rhd_website'));
         $rhd_author = absint(get_option('rhd_author'));
-
         $body = json_decode($request->get_body(), true);
         $hash_key = sanitize_text_field($body['hash_key']);
         $source_url = sanitize_text_field($body['source_url']);
@@ -791,23 +911,22 @@ class RHD_Admin
         $post_type = sanitize_text_field($post_data['post_type']);
 
         if ($request->get_route() != '/rhd/v1/rhd_init_call_request' && $request->get_route() != '/rhd/v1/rhd_image_call_request') {
-            return __('Invalid request. Please check the configration', 'rhd-migration');
+            return esc_html__('Invalid request. Please check the configration', 'rhd-migration');
         } else if ($rhd_website != 'destination') {
-            return __('Invalid request. Please check the destination website configration', 'rhd-migration');
+            return esc_html__('Invalid request. Please check the destination website configration', 'rhd-migration');
         } else if (empty($rhd_site_url) || empty($rhd_hash_key)) {
-            return __('Invalid request. Please check the configration', 'rhd-migration');
+            return esc_html__('Invalid request. Please check the configration', 'rhd-migration');
         } else if (empty($post_data) || empty($post_name) || empty($post_type)) {
-            return __("Invalid request. No data found the post/page", 'rhd-migration');
+            return esc_html__("Invalid request. No data found the post/page", 'rhd-migration');
         } else if (empty($rhd_author)) {
-            return __("Invalid request. Author is not assigned in the destination website configration.", 'rhd-migration');
+            return esc_html__("Invalid request. Author is not assigned in the destination website configration.", 'rhd-migration');
         } else if ($current != $this->cleanRHDURL($site_url) . '/wp-json/rhd/v1/rhd_init_call_request/' && $current != $this->cleanRHDURL($site_url) . '/wp-json/rhd/v1/rhd_image_call_request/') {
-            return __('Invalid request. Please check the configration', 'rhd-migration');
+            return esc_html__('Invalid request. Please check the configration', 'rhd-migration');
         } else if ($rhd_hash_key != $hash_key) {
-            return __("Invalid request. Authentication failure. Please check the hash key provided in source and destination should be same", 'rhd-migration');
+            return esc_html__("Invalid request. Authentication failure. Please check the hash key provided in source and destination should be same", 'rhd-migration');
         } else if ($this->cleanRHDURL($rhd_site_url) == $this->cleanRHDURL($rhd_destination_url)) {
-            return __("Invalid request. Source & Destination URL can not be same in configration.", 'rhd-migration');
+            return esc_html__("Invalid request. Source & Destination URL can not be same in configration.", 'rhd-migration');
         }
-
         return true;
     }
 
@@ -825,8 +944,16 @@ class RHD_Admin
         }
         return $pageURL;
     }
-    public function json_return($result)
+    public function json_success_return($message, $image_upload)
     {
+        $result = array('error' => 0, 'message' => $message, 'image_upload' => $image_upload);
+        echo json_encode($result);
+        exit;
+    }
+
+    public function json_error_return($message)
+    {
+        $result = array('error' => 1, 'message' => '<ul><li><a class="rhd-error" >' .$message. '</a></li></ul>');
         echo json_encode($result);
         exit;
     }
@@ -851,14 +978,73 @@ class RHD_Admin
 
     function rhd_footer()
     {
-        echo wp_kses_post('<div id="log-rhd-modal" class="modal "><div class="log-rhd-header"><h2>' . __('RHD Migration', 'rhd-migration') . '</h2></div><div id="log-rhd-row" ></div><div class="log-rhd-footer"><a href="#close" class="button button-primary button-large rhd-pull-right"  rel="modal:close">' . __('Close', 'rhd-migration') . '</a></div></div>');
+        $rhd_destination_url = sanitize_textarea_field(get_option('rhd_destination_url'));
+        $destination_html = '';
+        if(!empty($rhd_destination_url))
+        {
+            $destination_urls = explode(PHP_EOL, $rhd_destination_url);
+            foreach($destination_urls as $i => $url)
+            {
+                $destination_html .= '<div class="rhd_destination_url" ><input type="checkbox" checked value="'.sanitize_text_field($url).'" id="rhd_destination_url_'.$i.'" name="rhd_destination_url"  />&nbsp;<label for="rhd_destination_url_'.$i.'" >'.sanitize_text_field($url).'</label></div>';
+            }
+        }
+        else{
+            $destination_html = esc_html__("No destination URL setup yet. Please setup the destination website URL from setting page [ Tools -> RHD Migration ]", 'rhd-migration');;    
+        } 
+        echo wp_kses_post('<div id="log-rhd-modal-2" class="modal "><div class="log-rhd-header"><h2>' . esc_html__('Migration Started', 'rhd-migration') . '</h2></div><div id="log-rhd-row" ><div id="rhd-loading-bar" ></div><ul class="rhd-tree"></ul></div><div class="log-rhd-footer"><a href="#close" class="button button-secondary button-large rhd-pull-right"  rel="modal:close">' . esc_html__('Close', 'rhd-migration') . '</a></div></div>');
+        $_html = '<div id="log-rhd-modal-1" class="modal "><div class="log-rhd-header"><h2>' . esc_html__('Migration Setting', 'rhd-migration') . '</h2></div>';
+        $_html .= '<div id="log-rhd-section" >
+        <table class="rhd-form-table">   
+                <tr valign="top">
+                    <th ><label for="destination_html">'.esc_html__( 'Destination URL', 'rhd-migration' ).'</label></th>
+                    <td>'.$destination_html.'</td>
+                </tr>
+                <tr valign="top">
+                    <td colspan="2" class="rhd-help-tr" >
+                        <div class="rhd-help-text">'.esc_html__( 'Select the destination that you would like to migrate data.', 'rhd-migration' ).'</div>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th><label for="media_exclude">'.esc_html__( 'Media Exclude', 'rhd-migration' ).'</label></th>
+                    <td><input type="checkbox" value="1"  name="media_exclude" id="media_exclude" /></td>
+                </tr> 
+                <tr valign="top">
+                    <td colspan="2" class="rhd-help-tr" >
+                        <div class="rhd-help-text">'.esc_html__( 'If you want to exclude images or pdfs etc.. during migration. Means you will manually move media on destination website.', 'rhd-migration' ).'</div>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th><label for="overwrite_media">'.esc_html__( 'Overwrite Media', 'rhd-migration' ).'</label></th>
+                    <td><input type="checkbox" value="1" checked name="overwrite_media" id="overwrite_media" /></td>
+                </tr> 
+                <tr valign="top">
+                    <td colspan="2" class="rhd-help-tr" >
+                        <div class="rhd-help-text">'.esc_html__( 'If media already exists on destination with same name then it would overwrite else exclude it.', 'rhd-migration' ).'</div>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th><label for="localhost_migration">'.esc_html__( 'Localhost Migration', 'rhd-migration' ).'</label></th>
+                    <td><input type="checkbox" value="1"  name="localhost_migration" id="localhost_migration" />
+                    <input type="hidden" value=""  name="rhd_id" id="rhd_id" />
+                    <input type="hidden" value=""  name="rhd_etype" id="rhd_etype" />
+                    </td>
+                </tr>  
+                <tr valign="top">
+                    <td colspan="2" class="rhd-help-tr" >
+                        <div class="rhd-help-text">'.esc_html__( 'If you are migrating media from localhost to remote server then plugin send images in different format.', 'rhd-migration' ).'</div>
+                    </td>
+                </tr>
+        </table>        
+        </div>';
+        $_html .= '<div class="log-rhd-footer"><a href="#start" class="button button-primary button-large rhd-pull-right rhd-start-migration">' . esc_html__('Start', 'rhd-migration') . '</a><a href="#close" class="button button-secondary button-large rhd-pull-right"  rel="modal:close">' . esc_html__('Close', 'rhd-migration') . '</a></div></div>';
+        echo $_html;
     }
 
     public function get_rhd_media_exclude()
     {
         $data = array(
-            'yes'     => __('Yes', 'rhd-migration'),
-            'no'   => __('No', 'rhd-migration'),
+            'yes'     => esc_html__('Yes', 'rhd-migration'),
+            'no'   => esc_html__('No', 'rhd-migration'),
         );
         return $data;
     }
@@ -866,9 +1052,9 @@ class RHD_Admin
     public function get_rhd_operations()
     {
         $data = array(
-            'add_update'   => __('Add/Update', 'rhd-migration'),
-            'add'     => __('Add', 'rhd-migration'),
-            'update'   => __('Update', 'rhd-migration'),
+            'add_update'   => esc_html__('Add/Update', 'rhd-migration'),
+            'add'     => esc_html__('Add', 'rhd-migration'),
+            'update'   => esc_html__('Update', 'rhd-migration'),
         );
         return $data;
     }
@@ -876,8 +1062,8 @@ class RHD_Admin
     public function get_rhd_websites()
     {
         $data = array(
-            'source'   => __('Source', 'rhd-migration'),
-            'destination'     => __('Destination', 'rhd-migration')
+            'source'   => esc_html__('Source', 'rhd-migration'),
+            'destination'     => esc_html__('Destination', 'rhd-migration')
         );
         return $data;
     }
@@ -895,7 +1081,7 @@ class RHD_Admin
     function page_tabs($current = 'rhd-migration')
     {
         $tabs = array(
-            'rhd-migration'   => __('Settings', 'rhd-migration')
+            'rhd-migration'   => esc_html__('Settings', 'rhd-migration')
         );
         $html = '<h2 class="nav-tab-wrapper">';
         foreach ($tabs as $tab => $name) {
@@ -923,6 +1109,24 @@ class RHD_Admin
         }
     }
 
+    function isImageDestinationURL($url)
+    {
+        $site_url = sanitize_text_field(site_url());
+        $destination = $this->cleanRHDURL($site_url);
+        $pos = strpos($url, $destination);
+        if ($pos === false) {
+            if(!$this->isAbsolute($url))
+            {
+                return true;
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+
+    
     function replaceUrlContent($content)
     {
         $rhd_site_url = sanitize_text_field(get_option('rhd_site_url'));
@@ -948,7 +1152,7 @@ class RHD_Admin
         $remote_request = new WordPressRemoteJSON($json_url, array(), "get");
         $remote_request->run();
         if (!$remote_request->is_success()) {
-            $response = '<div class="rhd-status-msg rhd-error" >' . __('To Run an extension, REST-API needs to be enabled. Please make sure that Permalinks should be enable by default. Go to the <b>Options page</b>, click the <b>Permalinks</b> subtab.This will take you to the page where you can customize how WordPress generates permalinks for blog posts. If its enabled still getting an error then please check an error:', 'rhd-migration') . ' "' . $remote_request->get_response_message() . '".</div>';
+            $response = '<div class="rhd-status-msg rhd-error" >' . esc_html__('To Run an extension, REST-API needs to be enabled. Please make sure that Permalinks should be enable by default. Go to the <b>Options page</b>, click the <b>Permalinks</b> subtab.This will take you to the page where you can customize how WordPress generates permalinks for blog posts. If its enabled still getting an error then please check an error:', 'rhd-migration') . ' "' . $remote_request->get_response_message() . '".</div>';
             return $response;
         }
     }
@@ -960,7 +1164,7 @@ class RHD_Admin
         if ($rhd_website_name == 'source') {
             $html = '<div id="major-publishing-actions">';
             $html .= '<div id="export-action">';
-            $html .= '<a href="#" class="rhd-start-migrate button button-primary button-large  " data-id="' . $post->ID . '" data-type="' . $post->post_type . '" data-alert="1" rel="permalink">' . __('RHD Migrate', 'rhd-migration') . '</a>';
+            $html .= '<a href="#" class="rhd-start-migrate button button-primary button-large  " data-id="' . esc_attr($post->ID) . '" data-alert="1" rel="permalink">' . esc_html__('RHD Migrate', 'rhd-migration') . '</a>';
             $html .= '</div>';
             $html .= '</div>';
             echo wp_kses_post($html);
@@ -971,7 +1175,7 @@ class RHD_Admin
     {
         $rhd_website_name = get_option('rhd_website');
         if ($rhd_website_name == 'source') {
-            $actions['rhd-migration'] = '<a href="#" class="rhd-start-migrate" data-alert="0" data-id="' . $post->ID . '" data-type="' . $post->post_type . '"  >' . __('RHD Migrate', 'rhd-migration') . '</a>';
+            $actions['rhd-migration'] = wp_kses_post('<a href="#" class="rhd-start-migrate" data-alert="0" data-id="' . esc_attr ($post->ID). '" >' . esc_html__('RHD Migrate', 'rhd-migration') . '</a>');
         }
         return $actions;
     }
@@ -1033,7 +1237,7 @@ class RHD_Admin
             get_admin_url() . 'tools.php'
         ));
         // Create the link.
-        $settings_link = "<a href='$url'>" . __('Settings') . '</a>';
+        $settings_link = "<a href='$url'>" . esc_html__('Settings') . '</a>';
         // Adds the link to the end of the array.
         array_push(
             $links,
@@ -1061,35 +1265,71 @@ class RHD_Admin
         return $this->cleanRHDURL($url);
     }
 
-    function rhd_destination_url_validation($url)
+    function rhd_destination_url_validation($urls)
     {
-        if (!empty($url)) {
-            if (filter_var($url, FILTER_VALIDATE_URL) === FALSE) {
-                add_settings_error('rhd_option_notice', 'invalid_rhd_destination_url', 'Destination URL is not valid.');
-                $url = get_option('rhd_destination_url'); // ignore the user's changes and use the old database value 
-            }
-            else if ($this->isDestinationURL($url)) {  
-                add_settings_error('rhd_option_notice', 'invalid_rhd_destination_url', 'Destination URL can not same as current url.');
-                $url = get_option('rhd_destination_url'); // ignore the user's changes and use the old database value 
-            }
-            else {
-                $remote_request = new WordPressRemoteJSON($url, array(), "get");
-                $remote_request->run();
-                if (!$remote_request->is_success()) {
-                    add_settings_error('rhd_option_notice', 'invalid_rhd_destination_url', 'Destination URL returing false status. Please check URL exists.');
-                    $url = get_option('rhd_destination_url'); // ignore the user's changes and use the old database value 
+        if (!empty($urls)) {
+            $url_arr = array_unique(array_filter(explode(PHP_EOL, $urls)));
+            $final_urls = Array();
+            foreach($url_arr as $url)
+            {
+                $error = 0;
+                if (filter_var($url, FILTER_VALIDATE_URL) === FALSE) {
+                    $error = 1;
+                    add_settings_error('rhd_option_notice', 'invalid_rhd_destination_url', 'Destination URL is not valid ['.$url.'].');
                 }
-                else
-                {
-                    # API CALL for Check
-                    $remote_request = new WordPressRemoteJSON($this->cleanRHDURL($url) . '/wp-json/rhd/v1/rhd_check_call_request/', array(), "get");
-                    $remote_request->run(); 
+                else if ($this->isDestinationURL($url)) {  
+                    $error = 1;
+                    add_settings_error('rhd_option_notice', 'invalid_rhd_destination_url', 'Destination URL can not same as current url ['.$url.'].');
+                }
+                else {
+                    $remote_request = new WordPressRemoteJSON($url, array(), "get");
+                    $remote_request->run();
                     if (!$remote_request->is_success()) {
-                        add_settings_error('rhd_option_notice', 'invalid_rhd_destination_url', 'Looks like destination website is not enabled with RHD plugin or path is incorrect. Please configure it correctly.');
+                        $error = 1;
+                        add_settings_error('rhd_option_notice', 'invalid_rhd_destination_url', 'Destination URL returing false status. Please check URL exists ['.$url.'].');
                     }
-                } 
+                    else
+                    {
+                        # API CALL for Check
+                        $remote_request = new WordPressRemoteJSON($this->cleanRHDURL($url) . '/wp-json/rhd/v1/rhd_check_call_request/', array(), "get");
+                        $remote_request->run(); 
+                        if (!$remote_request->is_success()) {
+                           // $error = 1;
+                            add_settings_error('rhd_option_notice', 'invalid_rhd_destination_url', 'Looks like destination website is not enabled with RHD plugin or path is incorrect. Please configure it correctly ['.$url.'].');
+                        }
+                    } 
+                }
+                if(!$error)
+                {
+                    $final_urls[] = $this->cleanRHDURL($url);
+                }
             }
         }       
-        return $this->cleanRHDURL($url);
+        $final_urls = array_unique($final_urls);
+        return  implode(PHP_EOL, $final_urls);
+    }
+
+    function rhd_media_ext_validation($media_ext)
+    { 
+        $ext_arr = array_unique(array_filter(explode(",", $media_ext)));
+        $media_ext = implode(",", $ext_arr);
+        $extensions = array("php", "py", "exe");
+        if (empty($media_ext)) {
+            add_settings_error('rhd_option_notice', 'invalid_rhd_media_ext', 'Media extension can not be left blank.');
+        }
+        else 
+        { 
+            foreach($ext_arr as $ext)
+            {
+                $ext = trim(strtolower($ext));
+                if(in_array($ext, $extensions))
+                {
+                    add_settings_error('rhd_option_notice', 'invalid_rhd_media_ext', 'Executable extension not allowed to migrate like ['.$ext.'].');
+                    $media_ext = get_option('rhd_media_ext'); 
+                    break;
+                }               
+            }
+        }       
+        return $media_ext;
     }
 }

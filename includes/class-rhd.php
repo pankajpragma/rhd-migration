@@ -161,8 +161,7 @@ class RHD {
 		$this->loader->add_filter( 'plugin_action_links_' .  $this->rhd.'/rhd-migration.php', $rhd_admin,  'rhd_settings_link' ); 
 		$this->loader->add_filter('page_row_actions',$rhd_admin,  'add_rhd_post_action_menu', 10, 2);
 		$this->loader->add_filter('post_row_actions',$rhd_admin,  'add_rhd_post_action_menu', 10, 2);
-		$this->loader->add_action('post_submitbox_misc_actions', $rhd_admin, 'rhd_page_custom_button_classic');
-		$this->loader->add_action('post_submitbox_misc_actions', $rhd_admin, 'rhd_page_custom_button_classic');
+		$this->loader->add_action('post_submitbox_misc_actions', $rhd_admin, 'rhd_page_custom_button_classic'); 
 	}
 
 	/**
