@@ -95,6 +95,7 @@ class RHD_Admin
         $overwrite    = $this->filterIntData('overwrite');
         $exclude    = $this->filterIntData('exclude');
         $rhd_destination_url  = sanitize_text_field($this->filterTextData('destination'));
+        $hash  = sanitize_text_field($this->filterTextData('hash'));
 
         $rhd_hash_key = sanitize_text_field(get_option('rhd_shash_key'));
         $rhd_comment = sanitize_text_field(get_option('rhd_comment'));
@@ -223,16 +224,15 @@ class RHD_Admin
             if (!empty($output) && isset($output['message']) && is_array($output['message'])) {
                 $error = !$output['status'];
                 if(!$error)
-                {
-                    
+                {                    
                     if ($image && !$exclude)
                     {
-                        $response =  "<ul class='rhd-image-section' id='image_section_".$id."' >";
+                        $response =  "<ul class='rhd-image-section' id='image_section_".$id."_".$hash."' >";
                     }
                     else
                     {
-                        $response =  "<ul class='rhd-post-section'  id='post_image_".$id."' >";
-                        $response .=  "<li><a class='rhd-page-title'  >".esc_html__('Post/Page Title: ', 'rhd-migration'). esc_html($post_data->post_title)."</a></li>";
+                        $response =  "<ul class='rhd-post-section'  id='post_image_".$id."_".$hash."' >";
+                        $response .=  "<li><a class='rhd-page-title'  >".esc_html__('Title: ', 'rhd-migration'). esc_html($post_data->post_title)."</a></li>";
                     }
                     foreach ($output['message'] as $message) {
                         $response .=  "<li><a class='rhd-message' >".$message."</a></li>";
@@ -396,7 +396,7 @@ class RHD_Admin
 
             if ($media == "yes") {
                 $response['status'] = false;
-                $response['message'] = array(esc_html__("Oops! Post/Page media synchronization is disabled on destination website.", "rhd"));
+                $response['message'] = array(esc_html__("Oops! Post/Page media synchronization is disabled on destination website.", "rhd-migration"));
             } else {
                 $rhd_author = absint(get_option('rhd_author'));
                 $display_name = sanitize_text_field($body['display_name']);
@@ -441,11 +441,11 @@ class RHD_Admin
                 if(count($found_images) || count($images))
                 {
                     $response['status'] = true;
-                    $message[] = esc_html__("Page/Post media synchronization is completed.", "rhd");
+                    $message[] = esc_html__("Media synchronization is completed.", "rhd-migration");
                 }
                 else{
                     $response['status'] = false;
-                    $message[] = esc_html__("No media found to synchronize.", "rhd");
+                    $message[] = esc_html__("No media found to synchronize.", "rhd-migration");
                 }
                 $response['message'] = $message;
             }
@@ -490,6 +490,7 @@ class RHD_Admin
             if (!empty($the_user)) {
                 $rhd_author = absint($the_user->ID);
             }
+            $message = Array();
             $found_post_id = $this->getPostId($post_name, $post_type, $old_post_id);
             $post_args = array();
             $post_args['ID'] = $found_post_id;
@@ -508,7 +509,13 @@ class RHD_Admin
             $post_args['post_parent'] = 0;
             if (!empty($parent_post_name)) {
                 $parent_post = get_page_by_path($parent_post_name, OBJECT, $post_type);
+
                 $post_args['post_parent'] = isset($parent_post->ID) ? $parent_post->ID : 0;
+
+                if(empty($post_args['post_parent']))
+                {
+                    $message['parent_error'] = esc_html__('Parent not found on the destination page.', 'rhd-migration');
+                }
             }
             $meta_inputs = array();
             foreach ($post_meta as $meta_key => $meta_value) {
@@ -521,11 +528,12 @@ class RHD_Admin
                 $postId = wp_insert_post($post_args, true);
                 if (is_wp_error($postId)) {
                     $response['status'] = false;
-                    $response['message'] = array($postId->get_error_message());
+                    $message[] = $postId->get_error_message();
+                    $response['message'] = $message;
                     $response['image_opr'] = 0;
                 } else {
 
-                    $message = array(esc_html__('Post/Page is created successfully!', 'rhd-migration'));
+                    $message[] = esc_html__('Post/Page is created successfully!', 'rhd-migration');
                     $this->addPostMeta($postId, $meta_inputs, $message, $old_post_id, $post_type);
                     $this->addTaxonomies($postId, $taxonomies, $message);
                     $this->addComments($postId, $comments, $message);
@@ -541,15 +549,15 @@ class RHD_Admin
                 $post_id = wp_update_post($post_args, true);
                 if (is_wp_error($post_id)) {
                     $response['status'] = false;
-                    $response['message'] = array($post_id->get_error_message());
+                    $message[] = $postId->get_error_message();
+                    $response['message'] = $message;
                     $response['image_opr'] = 0;
                 } else {
                     $postId = $post_args['ID'];
                     # Add comments
-                    $message = array(esc_html__('Post/Page is updated successfully!', 'rhd-migration'));
                     $this->addPostMeta($postId, $meta_inputs, $message, $old_post_id, $post_type);
                     $this->addTaxonomies($postId, $taxonomies, $message);
-                    $message[] = esc_html__('Migration completed successfully!', 'rhd-migration');
+                    $message[] = esc_html__('Content updated successfully!', 'rhd-migration');
                     $response['status'] = true;
                     $response['message'] = $message;
                     $response['image_opr'] = 1;
@@ -826,7 +834,7 @@ class RHD_Admin
         }
 
         if (!$is_error) {
-            $message['attachment_success'] =  esc_html__('All post/page media copied successfully!', 'rhd-migration');
+           // $message['attachment_success'] =  esc_html__('All post/page media copied successfully!', 'rhd-migration');
         }
     }
 
@@ -885,7 +893,7 @@ class RHD_Admin
             }
         }
         if (!$is_error) {
-            $message['attachment_success'] = esc_html__('All page/post media copied successfully!', 'rhd-migration');
+            $message['attachment_success'] = esc_html__('Media copied successfully!', 'rhd-migration');
         }
     }
 
@@ -991,9 +999,10 @@ class RHD_Admin
         else{
             $destination_html = esc_html__("No destination URL setup yet. Please setup the destination website URL from setting page [ Tools -> RHD Migration ]", 'rhd-migration');;    
         } 
-        echo wp_kses_post('<div id="log-rhd-modal-2" class="modal "><div class="log-rhd-header"><h2>' . esc_html__('Migration Started', 'rhd-migration') . '</h2></div><div id="log-rhd-row" ><div id="rhd-loading-bar" ></div><ul class="rhd-tree"></ul></div><div class="log-rhd-footer"><a href="#close" class="button button-secondary button-large rhd-pull-right"  rel="modal:close">' . esc_html__('Close', 'rhd-migration') . '</a></div></div>');
+        echo wp_kses_post('<div id="log-rhd-modal-2" class="modal "><div class="log-rhd-header"><h2 id="rhd-migration-heading" >' . esc_html__('Migration Started', 'rhd-migration') . '</h2></div><div id="log-rhd-row" ><div id="rhd-loading-bar" ></div><ul class="rhd-tree"></ul></div><div class="log-rhd-footer"><a href="#close" class="button button-secondary button-large rhd-pull-right"  rel="modal:close">' . esc_html__('Close', 'rhd-migration') . '</a></div></div>');
         $_html = '<div id="log-rhd-modal-1" class="modal "><div class="log-rhd-header"><h2>' . esc_html__('Migration Setting', 'rhd-migration') . '</h2></div>';
         $_html .= '<div id="log-rhd-section" >
+        <div class="rhd-migration-help-txt" >'.esc_html__( 'If you would like to overwrite the selected default setting then select the option accordingly. The selected settings are going to impact the selected post/page only.', 'rhd-migration' ).'</div>
         <table class="rhd-form-table">   
                 <tr valign="top">
                     <th ><label for="destination_html">'.esc_html__( 'Destination URL', 'rhd-migration' ).'</label></th>
@@ -1006,7 +1015,7 @@ class RHD_Admin
                 </tr>
                 <tr valign="top">
                     <th><label for="media_exclude">'.esc_html__( 'Media Exclude', 'rhd-migration' ).'</label></th>
-                    <td><input type="checkbox" value="1"  name="media_exclude" id="media_exclude" /></td>
+                    <td><input type="checkbox" value="1"  name="media_exclude" id="media_exclude" class="rhd_media_exclude" /></td>
                 </tr> 
                 <tr valign="top">
                     <td colspan="2" class="rhd-help-tr" >
@@ -1099,6 +1108,10 @@ class RHD_Admin
 
     function isDestinationURL($url)
     {
+        if(empty($url) || $url == "#")
+        {
+            return false;
+        }
         $site_url = sanitize_text_field(site_url());
         $destination = $this->cleanRHDURL($site_url);
         $pos = strpos($url, $destination);
@@ -1111,6 +1124,10 @@ class RHD_Admin
 
     function isImageDestinationURL($url)
     {
+        if(empty($url) || $url == "#")
+        {
+            return false;
+        }
         $site_url = sanitize_text_field(site_url());
         $destination = $this->cleanRHDURL($site_url);
         $pos = strpos($url, $destination);
@@ -1268,7 +1285,7 @@ class RHD_Admin
     function rhd_destination_url_validation($urls)
     {
         if (!empty($urls)) {
-            $url_arr = array_unique(array_filter(explode(PHP_EOL, $urls)));
+            $url_arr = array_map('trim', array_unique(array_filter(explode(PHP_EOL, $urls))));
             $final_urls = Array();
             foreach($url_arr as $url)
             {
@@ -1304,9 +1321,10 @@ class RHD_Admin
                     $final_urls[] = $this->cleanRHDURL($url);
                 }
             }
+            $final_urls = array_unique($final_urls);
+            return  implode(PHP_EOL, $final_urls);
         }       
-        $final_urls = array_unique($final_urls);
-        return  implode(PHP_EOL, $final_urls);
+       return $urls;
     }
 
     function rhd_media_ext_validation($media_ext)

@@ -1,4 +1,4 @@
-=== RHD Migration ===
+=== RHD Migration Posts, Pages & Custom Post Types ===
 Contributors: pankajpragma
 Tags: migrate, page, move, one click, rhd, migration, RHD Migration
 Requires at least: 5.0.1
@@ -7,18 +7,22 @@ Stable tag: 1.0.0
 Requires PHP: 5.2.4
 License: GPLv2 or later
 
-One click to migrate a page, post, or custom post type from one WordPress to another WordPress. If you want to migrate post/page content from the stage to the production server, this plugin will be your best choice. 
-
+Migrate pages, posts, or custom post types from one WordPress to another WordPress. If you want to migrate post/page content from the stage to the multiple production server, this plugin will be your best choice.
 == Description ==
 
-One click to migrate a page, post, or custom post type from one WordPress to another WordPress. If you want to migrate post/page content from the stage to the production server, this plugin will be your best choice. 
+Migrate pages, posts, or custom post types from one WordPress to another WordPress. If you want to migrate post/page content from the stage to the multiple production server, this plugin will be your best choice. 
 
-If your client wants to prepare the page/post in a staging environment and wants to migrate automatically to production then the plugin will do it easily for you. It automatically downloads media based on configuration. We are going to add more featured soon...
+If your client wants to prepare the page/post in a staging environment and wants to migrate to production with less efforts then the plugin will do it easily for you. It automatically downloads media based on configuration. We are going to add more featured soon...
 
 = Special Features =
 - Communicate with WordPress default API. So no special configuration is needed.
 - Download Media Automatically.
 - Add/Update post/page data based on configuration
+- RTL Supported
+- Comment Migratation Supported
+- Media Exclude Supported
+- Multiple Destination Supported
+- Overwrite the default setting during the migration
 
 **More features will be added soon...**
 

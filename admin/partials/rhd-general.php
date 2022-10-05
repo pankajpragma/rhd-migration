@@ -191,9 +191,9 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
   </div>
   <div class="rhd-col rhd_span_1_of_2 rhd-about-us">
       <h3 ><span><?php echo esc_html_e( "About this Plugin:", 'rhd-migration' ); ?></span></h3>
-      <p><?php echo esc_html_e( "One-click to migrate a page, post, or custom post type from one WordPress to another WordPress.", 'rhd-migration' ); ?></p>
-            <p><?php echo esc_html_e( "If you want to migrate post/page content from the stage to the production server, this plugin will be your best choice.", 'rhd-migration' ); ?></p>
-            <p><?php echo esc_html_e( "If your client wants to prepare the page in a staging environment and wants to migrate automatically to production then the plugin will do it easily for you. It automatically downloads media based on configuration.", 'rhd-migration' ); ?></p>
+      <p><?php echo esc_html_e( "Migrate pages, posts, or custom post types from one WordPress to another WordPress.", 'rhd-migration' ); ?></p>
+            <p><?php echo esc_html_e( "If you want to migrate post/page content from the stage to the multiple production server, this plugin will be your best choice. ", 'rhd-migration' ); ?></p>
+            <p><?php echo esc_html_e( "If your client wants to prepare the page in a staging environment and wants to migrate to production with less efforts then the plugin will do it easily for you. It automatically downloads media based on configuration.", 'rhd-migration' ); ?></p>
             <h3><?php echo esc_html_e( "Special Features:", 'rhd-migration' ); ?> </h3>
             <ul class="rhd-help-doc">
               <li><?php echo esc_html_e( "Communicate with WordPress default API. So no special configuration is needed.", 'rhd-migration' ); ?></li>
@@ -201,8 +201,11 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
               <li><?php echo esc_html_e( "Multiple Destination URL Support.", 'rhd-migration' ); ?></li>
               <li><?php echo esc_html_e( "Add/Update post/page data based on configuration", 'rhd-migration' ); ?></li>
               <li><?php echo esc_html_e( "RTL Supported", 'rhd-migration' ); ?></li>        
-              <li><?php echo esc_html_e( "Comment migratation support", 'rhd-migration' ); ?></li>    
-              <li><?php echo esc_html_e( "Media exclude support", 'rhd-migration' ); ?></li>            
+              <li><?php echo esc_html_e( "Comment Migratation Supported", 'rhd-migration' ); ?></li>    
+              <li><?php echo esc_html_e( "Media Exclude Supported", 'rhd-migration' ); ?></li>  
+              <li><?php echo esc_html_e( "Multiple Destination Supported", 'rhd-migration' ); ?></li>  
+              <li><?php echo esc_html_e( "Overwrite the default setting during the migration", 'rhd-migration' ); ?></li>  
+
             </ul>
             <p><strong><?php echo esc_html_e( "More features will be added soon...", 'rhd-migration' ); ?></strong></p> 
   </div>

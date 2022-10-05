@@ -85,16 +85,27 @@ jQuery(document).ready(function () {
 		if (jQuery('#localhost_migration').is(":checked"))
 			localhost_migration  =1;
 
+		//setup an array of AJAX options,
+		//each object will specify information for a single AJAX request
+		var ajaxes  = [];
+		var imagajax = [];
+		current = 0;
 		if(id == "--")
 		{
 			jQuery("input[name='post[]']:checked").each(function() {
 				id = jQuery(this).val();
-				console.log('ID:'+id);
-				jQuery("input[name='rhd_destination_url']:checked").each(function() {
-					console.log('rhd_destination_url:'+jQuery(this).val());
+				jQuery("input[name='rhd_destination_url']:checked").each(function() { 
 					if(jQuery(this).val())
 					{
-						load_generator_log(id, localhost_migration, overwrite_media, media_exclude, jQuery(this).val());
+						destination_url = jQuery(this).val();
+						var hash = hashRhdCode(destination_url);
+						input_data = { id: id, action: "load_rhd_log", image: "0" , destination: destination_url, localhost:localhost_migration, overwrite:overwrite_media, exclude:media_exclude, hash: hash};
+						var data = {
+							url      : ajaxurl,
+							data     : input_data,
+							callback : function (data) { }
+						};
+						ajaxes.push(data);
 					}
 				});
 			});
@@ -103,60 +114,117 @@ jQuery(document).ready(function () {
 			jQuery("input[name='rhd_destination_url']:checked").each(function() {
 				if(jQuery(this).val())
 				{
-					load_generator_log(id, localhost_migration, overwrite_media, media_exclude, jQuery(this).val());
+					destination_url = jQuery(this).val();
+					var hash = hashRhdCode(destination_url);
+					input_data = { id: id, action: "load_rhd_log", image: "0" , destination: destination_url, localhost:localhost_migration, overwrite:overwrite_media, exclude:media_exclude, hash: hash};
+					var data = {
+						url      : ajaxurl,
+						data     : input_data,
+						callback : function (data) { }
+					};
+					ajaxes.push(data);
 				}
 			});
-		}	
-	});
+		}
 
+		if(ajaxes.length)
+		{
+			jQuery("#rhd-migration-heading").html("Migration Started"); 
+			jQuery("#log-rhd-modal-2").modal(); 
+			jQuery("#rhd-loading-bar").show();
+			//run the AJAX function for the first time once 
+			process_rhd_content_migration(current, ajaxes, imagajax);
+		}
+	});
 	function load_migration_setting(id) {
 		jQuery("#rhd_id").val(id);
 		jQuery("#log-rhd-modal-1").modal(); 
 	}
+	function process_rhd_content_migration(current, ajaxes, imagajax) { 
 
-	function load_generator_log(id, localhost_migration, overwrite_media, media_exclude, destination_url) {
-		jQuery("#log-rhd-modal-2").modal(); 
-		jQuery("#rhd-loading-bar").show();
-		var hash = hashRhdCode(destination_url);
-		if(!jQuery("#"+hash).length)
-		{
-			jQuery(".rhd-tree").append('<li id="'+hash+'"><a class="rhd-destination-log" >'+destination_url+'</a></li>');
-		}
-		input_data = { id: id, action: "load_rhd_log", image: "0" , destination: destination_url, localhost:localhost_migration, overwrite:overwrite_media, exclude:media_exclude};
-		jQuery.ajax({
-			type: "POST",
-			url: ajaxurl,
-			dataType: "json",
-			data: input_data,
-			success: function (alrt) {
-				jQuery("#rhd-loading-bar").hide(); 
-				jQuery("#"+hash).append(alrt.message);
-				if (alrt.image_upload == '1' && !alrt.error) {
-					jQuery("#rhd-loading-bar").show();
-					input_data = { id: id, action: "load_rhd_log", image: "1" , destination: destination_url, localhost:localhost_migration, overwrite:overwrite_media, exclude:media_exclude};
-					jQuery.ajax({
-						type: "POST",
-						url: ajaxurl,
-						dataType: "json",
-						data: input_data,
-						success: function (alrt) {
-							jQuery("#rhd-loading-bar").hide();
-							jQuery("#post_image_"+id).append(alrt.message);
-						},
-						error: function (alrt) {
-							jQuery("#rhd-loading-bar").hide();
-							jQuery("#post_image_"+id).append("<div class='rhd-status-msg rhd-error-label' >Error while processing your request, please try again.</div>");
-						}
-					});
-				}
-			},
-			error: function (alrt) {
-				jQuery("#rhd-loading-bar").hide();
-				jQuery("#"+hash).append("<div class='rhd-status-msg rhd-error-label' >Error while processing your request, please try again.</div>");
+		if (current < ajaxes.length) {
+			var hash = ajaxes[current].data.hash;
+			var destination = ajaxes[current].data.destination; 
+			if(!jQuery("#"+hash).length)
+			{
+				jQuery(".rhd-tree").append('<li id="'+hash+'"><a class="rhd-destination-log" >'+destination+'</a></li>');
 			}
-		});
+			jQuery.ajax({
+				type: "POST",
+				url: ajaxes[current].url,
+				dataType: "json",
+				data: ajaxes[current].data,
+				success  : function (alrt) {
+					//once a successful response has been received,
+					//no HTTP error or timeout reached,
+					//run the callback for this request
+					ajaxes[current].callback(alrt);
+					jQuery("#"+hash).append(alrt.message);
+					if (alrt.image_upload == '1' && !alrt.error) {
+						ajaxes[current].data.image = 1;
+						var data = {
+							url      : ajaxurl,
+							data     : ajaxes[current].data,
+							callback : function (data) { }
+						};
+						imagajax.push(data);
+					}
+				},
+				complete : function () {
+					//increment the `current` counter
+					//and recursively call our do_ajax() function again.
+					current++;
+					process_rhd_content_migration(current, ajaxes, imagajax);
+					//note that the "success" callback will fire
+					//before the "complete" callback
+				},
+				error: function (alrt) {				
+					jQuery("#"+hash).append("<div class='rhd-status-msg rhd-error-label' >Error while processing your request, please try again.</div>");
+				}
+			});
+		}
+		else
+		{
+			icurrent = 0;
+			process_rhd_image_migration(icurrent, imagajax);
+		}
+
 	}
 
+	function process_rhd_image_migration(icurrent, imagajax)
+	{
+		if (icurrent < imagajax.length) {
+
+			var hash = imagajax[icurrent].data.hash; 
+			var id = imagajax[icurrent].data.id;
+			jQuery.ajax({
+				type: "POST",
+				url: imagajax[icurrent].url,
+				dataType: "json",
+				data: imagajax[icurrent].data,
+				complete : function () {
+					//increment the `current` counter
+					//and recursively call our do_ajax() function again.
+					icurrent++;
+					process_rhd_image_migration(icurrent, imagajax);
+					//note that the "success" callback will fire
+					//before the "complete" callback
+				},
+				success: function (alrt) {
+					jQuery("#post_image_"+id+"_"+hash).append(alrt.message);
+				},
+				error: function (alrt) {
+					jQuery("#post_image_"+id+"_"+hash).append("<div class='rhd-status-msg rhd-error-label' >Error while processing your request, please try again.</div>");
+				}
+			});
+		}
+		else
+		{
+			jQuery("#rhd-loading-bar").hide(); 
+			jQuery("#rhd-migration-heading").html("Migration Completed"); 
+		}
+
+	}
 
 	jQuery(".copy-rhd-element").on('click', function (e) {
 		e.preventDefault();
@@ -176,7 +244,7 @@ jQuery(document).ready(function () {
 		copyText.select();
 		copyText.setSelectionRange(0, 99999); // For mobile devices
 		// Copy the text inside the text field
-		copyToClipboard(copyText.value); 
+		copyToRHDClipboard(copyText.value); 
 		jQuery(this).addClass("copied");
 		var obj = jQuery(this);
 		setTimeout(function () {
@@ -184,7 +252,16 @@ jQuery(document).ready(function () {
 		}, 3000);
 	});
 
-	
+	jQuery(".rhd_media_exclude").on('click', function (e) {
+		var media_exclude=0; 
+		if (jQuery('#media_exclude').is(":checked"))
+			media_exclude  =1;
+		if(media_exclude)
+		{
+			alert("You have selected the exclude option but still all links would get migrate. You need to move all media manually on destination.");
+		}
+	});
+
 	if(jQuery("#posts-filter").length)
 	{
 		jQuery(jQuery(".wrap .page-title-action")[0]).after('<a href="#" class="page-title-action bulk_rhd_migrate">Bulk RHD Migrate</a>');
@@ -198,7 +275,7 @@ function isUrlValidRHD(url) {
 	return false;
 }
 // return a promise
-function copyToClipboard(textToCopy) {
+function copyToRHDClipboard(textToCopy) {
     // navigator clipboard api needs a secure context (https)
     if (navigator.clipboard && window.isSecureContext) {
         // navigator clipboard api method'

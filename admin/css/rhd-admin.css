@@ -64,7 +64,7 @@
 	font-size: 14px;
 }
 div#log-rhd-row{
-  min-height: 100px;;
+  min-height: 100px; 
 }
 div#log-rhd-row, #rhd-loading-bar, #log-rhd-section {
     font-size: 14px;
@@ -308,4 +308,13 @@ td.rhd-help-tr {
   padding: 20px 16px 0px 0;
   line-height: 1.3;
   vertical-align: middle;
+}
+
+.rhd-migration-help-txt {
+  font-weight: bold; 
+  color: gray;
+  font-style: italic;
+}
+.rhd-page-title{
+  font-weight: bold;
 }
