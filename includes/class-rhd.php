@@ -115,6 +115,11 @@ class RHD {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-rhd-admin.php';
 
 		/**
+		 * The class responsible for defining all actions that occur in the admin area for logging.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-rhd-compatiblity.php';
+
+		/**
 		 * The class responsible for defining all actions that occur in the public-facing
 		 * side of the site.
 		 */
@@ -162,6 +167,9 @@ class RHD {
 		$this->loader->add_filter('page_row_actions',$rhd_admin,  'add_rhd_post_action_menu', 10, 2);
 		$this->loader->add_filter('post_row_actions',$rhd_admin,  'add_rhd_post_action_menu', 10, 2);
 		$this->loader->add_action('post_submitbox_misc_actions', $rhd_admin, 'rhd_page_custom_button_classic'); 
+
+		$this->loader->add_action( 'admin_post_rhd_download_sysinfo', $rhd_admin, 'download_sysinfo');
+
 	}
 
 	/**

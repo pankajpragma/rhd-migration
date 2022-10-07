@@ -10,6 +10,7 @@
 	display: block;
 	float:left;
 	margin: 1% 0 1% 1.6%;
+  background-color: #fff;
 }
 .rhd-col:first-child { margin-left: 0; }
 
@@ -43,9 +44,9 @@
 
 /*  GO FULL WIDTH AT LESS THAN 480 PIXELS */
 
-@media only screen and (max-width: 480px) {
+@media only screen and (max-width: 768px) {
 	.rhd-col { margin: 1% 0 1% 0%;}
-	.rhd_span_2_of_2, .rhd_span_1_of_2, .rhd_span_3_of_3, .rhd_span_2_of_3, .rhd_span_1_of_3 { width: 100%; }
+	.rhd_span_2_of_2, .rhd_span_1_of_2, .rhd_span_3_of_3, .rhd_span_2_of_3, .rhd_span_1_of_3 { width: 100% ; }
 }
 .rhd-help-text {
     display: block;
@@ -169,11 +170,12 @@ span.rhd-copied {
 .copied .rhd-copied {
   display: inline-block !important;
 }
-.rhd-about-us p { 
+.rhd-about-us p , #rhd-help-tab p{ 
   margin: 0.5em 0;
 }
-.rhd-about-us h3 { 
+.rhd-section h3 { 
   font-size: 1.5em; 
+  text-transform: uppercase;
 }
 .copied-hide .rhd-copied{
   display: none !important;
@@ -311,10 +313,148 @@ td.rhd-help-tr {
 }
 
 .rhd-migration-help-txt {
-  font-weight: bold; 
-  color: gray;
+  font-weight: bold;  
   font-style: italic;
 }
 .rhd-page-title{
   font-weight: bold;
+}
+
+.tools_page_rhd-migration #wpbody-content {
+  background: #383A46;
+  padding-bottom: 0!important;
+  margin: 0!important; 
+}
+.tools_page_rhd-migration  #wpcontent {
+  padding: 0!important;
+}
+.tools_page_rhd-migration .nav-tab-wrapper {
+  font-size: 23px;
+  height: 56px;
+  background: #262932;
+  display: flex;
+  padding: 0;
+  align-items: center;
+  margin: 0;
+}
+
+.tools_page_rhd-migration .nav-tab-wrapper ul {
+  padding: 0 32px;
+  display: flex;
+  column-gap: 32px;
+  height: 100%;
+  margin: 0;
+}
+
+.tools_page_rhd-migration  .nav-tab {
+  color: #fff;
+  opacity: .5;
+  border-top: 4px solid transparent!important;
+  border-bottom: 4px solid transparent!important;
+}
+.tools_page_rhd-migration  .nav-tab-wrapper a {
+  margin: 0;
+  background: 0 0;
+  border: none;
+  padding: 0;
+  font-weight: 500!important;
+  align-items: center;
+  display: inline-flex;
+  height: 100%;
+  box-sizing: border-box;
+}
+.tools_page_rhd-migration  .nav-tab-active {
+  color: #fff !important;
+  opacity: 1!important;
+  border-bottom: 4px solid #27CC87 !important;
+}
+
+.tools_page_rhd-migration  .nav-tab-wrapper li {
+  margin: 0;
+  padding: 0;
+}
+
+.tools_page_rhd-migration  .wrap {
+  margin: 0;
+  padding: 0;
+  overflow-x: auto!important;
+  margin-top: 25px;
+}
+
+.rhd-action-form {
+  margin: 0!important;
+  border: 0!important;
+  background-color: #f0f0f1;
+  box-shadow: none;
+  padding: 20px 32px;
+  padding-bottom: 120px;
+}
+.tools_page_rhd-migration  .nav-tab:hover {
+  opacity: 1;
+  background: 0 0;
+  color:#fff;
+}
+.tools_page_rhd-migration  .nav-tab:focus {
+  background: none;
+  color: #fff;
+  opacity: inherit;
+}
+
+.tools_page_rhd-migration  .regular-text {
+  background: #fff !important;
+  border: 1px solid #CAD8EC !important;
+  box-shadow: 0px 2px 2px rgba(182, 181, 204, 0.25) !important;
+  border-radius: 6px;
+  height: 40px;
+}
+
+.tools_page_rhd-migration  .regular-select{ 
+  border: 1px solid #CAD8EC !important;
+  box-shadow: 0px 2px 2px rgba(182, 181, 204, 0.25) !important;
+  border-radius: 6px; 
+}
+
+.tools_page_rhd-migration  .regular-textarea{
+  background: #fff !important;
+  border: 1px solid #CAD8EC !important;
+  box-shadow: 0px 2px 2px rgba(182, 181, 204, 0.25) !important;
+  border-radius: 6px; 
+}
+
+
+.rhd-button {
+  font-size: 15px !important;
+  letter-spacing: 0.4px !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0 24px !important;
+  column-gap: 8px;
+  margin: 0!important;
+}
+
+.rhd-button-lg {
+  height: 46px !important;
+}
+.rhd-hide{
+  display: none;
+}
+
+.rhd-tabs textarea[readonly] {
+  width: 100%;
+  height: 480px;
+  font-family: Menlo,Monaco,monospace;
+  font-size: 12px;
+  margin: 0;
+  background: #383A46;
+  color: #fff;
+  padding: 16px;
+  border-radius: 6px;
+  border: none;
+  box-shadow: 0px 2px 2px rgba(182, 181, 204, 0.25);
+}
+
+div#rhd-help-tab label {
+  font-size: 15px; 
 }

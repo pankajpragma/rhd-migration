@@ -264,9 +264,17 @@ jQuery(document).ready(function () {
 
 	if(jQuery("#posts-filter").length)
 	{
-		jQuery(jQuery(".wrap .page-title-action")[0]).after('<a href="#" class="page-title-action bulk_rhd_migrate">Bulk RHD Migrate</a>');
+		jQuery(jQuery(".wrap .page-title-action")[0]).after('<a href="#" class="page-title-action bulk_rhd_migrate">Bulk Migration</a>');
 	}
-	
+
+	jQuery(".rhd-tab-wrapper a").on('click', function (e) {
+		e.preventDefault();
+		var ele = jQuery(this).attr('href'); 
+		jQuery(".rhd-tabs").hide();
+		jQuery(ele+"-tab").show();
+		jQuery(".rhd-tab-wrapper a").removeClass('nav-tab-active');
+		jQuery(this).addClass('nav-tab-active');
+	});
 });
 function isUrlValidRHD(url) {
 	if (url.match(/\(?(?:(http|https|ftp):\/\/)?(?:((?:[^\W\s]|\.|-|[:]{1})+)@{1})?((?:www.)?(?:[^\W\s]|\.|-)+[\.][^\W\s]{2,4}|localhost(?=\/)|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?::(\d*))?([\/]?[^\s\?]*[\/]{1})*(?:\/?([^\s\n\?\[\]\{\}\#]*(?:(?=\.)){1}|[^\s\n\?\[\]\{\}\.\#]*)?([\.]{1}[^\s\?\#]*)?)?(?:\?{1}([^\s\n\#\[\]]*))?([\#][^\s\n]*)?\)?/g) != null) {

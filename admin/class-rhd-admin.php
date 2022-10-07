@@ -1090,14 +1090,15 @@ class RHD_Admin
     function page_tabs($current = 'rhd-migration')
     {
         $tabs = array(
-            'rhd-migration'   => esc_html__('Settings', 'rhd-migration')
+            'rhd-migration'   => esc_html__('Settings', 'rhd-migration'),
+            'rhd-help'   => esc_html__('Help', 'rhd-migration')
         );
-        $html = '<h2 class="nav-tab-wrapper">';
+        $html = '<div class="nav-tab-wrapper rhd-tab-wrapper"><ul>';
         foreach ($tabs as $tab => $name) {
             $class = ($tab == $current) ? 'nav-tab-active' : '';
-            $html .= '<a class="nav-tab ' . $class . '" href="?page=' . $tab . '">' . $name . '</a>';
+            $html .= '<li><a class="nav-tab ' . $class . '" href="#'.$tab.'">' . $name . '</a></li>';
         }
-        $html .= '</h2><div class="rhd-loader"></div>';
+        $html .= '</ul></div>';
         return $html;
     }
 
@@ -1179,9 +1180,10 @@ class RHD_Admin
         global $post;
         $rhd_website_name = get_option('rhd_website');
         if ($rhd_website_name == 'source') {
+            $type = $this->getActionName($post->post_type);
             $html = '<div id="major-publishing-actions">';
             $html .= '<div id="export-action">';
-            $html .= '<a href="#" class="rhd-start-migrate button button-primary button-large  " data-id="' . esc_attr($post->ID) . '" data-alert="1" rel="permalink">' . esc_html__('RHD Migrate', 'rhd-migration') . '</a>';
+            $html .= '<a href="#" class="rhd-start-migrate button button-primary button-large  " data-id="' . esc_attr($post->ID) . '" data-alert="1" rel="permalink">' . esc_html__('Migrate', 'rhd-migration') . $type .'</a>';
             $html .= '</div>';
             $html .= '</div>';
             echo wp_kses_post($html);
@@ -1192,9 +1194,16 @@ class RHD_Admin
     {
         $rhd_website_name = get_option('rhd_website');
         if ($rhd_website_name == 'source') {
-            $actions['rhd-migration'] = wp_kses_post('<a href="#" class="rhd-start-migrate" data-alert="0" data-id="' . esc_attr ($post->ID). '" >' . esc_html__('RHD Migrate', 'rhd-migration') . '</a>');
+            $type = $this->getActionName($post->post_type);
+            $actions['rhd-migration'] = wp_kses_post('<a href="#" class="rhd-start-migrate" data-alert="0" data-id="' . esc_attr ($post->ID). '" >' . esc_html__('Migrate', 'rhd-migration') . $type .'</a>');
         }
         return $actions;
+    }
+
+    function getActionName($type)
+    {
+        $type = preg_replace('/\s+/', '_', $type);
+        return " ".ucfirst(strtolower($type));
     }
 
     function getResourceUrls($content, &$found_images)
@@ -1350,4 +1359,22 @@ class RHD_Admin
         }       
         return $media_ext;
     }
+
+
+
+    /**
+	 * Downloads the system info file for support.
+	 * @access public
+	 */
+	public function download_sysinfo() {
+		check_admin_referer( 'rhd_download_sysinfo', 'rhd_sysinfo_nonce' );
+
+		nocache_headers();
+
+		header( 'Content-Type: text/plain' );
+		header( 'Content-Disposition: attachment; filename="rhd-system-info.txt"' );
+
+		echo wp_strip_all_tags( $_POST['rhd-sysinfo'] );
+		die();
+	}
 }
