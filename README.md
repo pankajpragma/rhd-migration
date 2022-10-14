@@ -1,5 +1,5 @@
 # RHD-Migration
-One click to migrate a page, post, or custom post type from one WordPress to another WordPress. If you want to migrate post/page content from the stage to the production server, this plugin will be your best choice. 
+Migrate the content of pages, posts, or custom post types from one WordPress to another WordPress. If you want to migrate post/page content from the stage to the production server, this plugin will be your best choice. 
 
 If your client wants to prepare the page/post in a staging environment and wants to migrate automatically to production then the plugin will do it easily for you. It automatically downloads media based on configuration. We are going to add more featured soon...
 
@@ -38,13 +38,15 @@ On the WordPress dashboard, go to Settings → Permalinks Screen. You can choose
 
 ## Screenshots
 
-![Source Setting](https://pragmasoftwares.com/rhd-migration/Source-Page-Setting.png)
+![Source Setting](https://pragmasoftwares.com/rhd-migration/Source-Page-Settings.png)
 
-![Destination Setting](https://pragmasoftwares.com/rhd-migration/Destination-Page-Setting.png)
+![Destination Setting](https://pragmasoftwares.com/rhd-migration/Destination-Page-Settings.png)
 
-![Page/Post Action](https://pragmasoftwares.com/rhd-migration/Page-Post-Action.png)
+![Page/Post Action](https://pragmasoftwares.com/rhd-migration/Page-Post-Actions.png)
 
-![ Success Popup](https://pragmasoftwares.com/rhd-migration/Popup.png)
+![Overwrite Setting Popup](https://pragmasoftwares.com/rhd-migration/Popup-1.png)
+
+![Success Popup](https://pragmasoftwares.com/rhd-migration/Popup-2.png)
 
 
 ## Feedback
