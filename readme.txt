@@ -3,7 +3,7 @@ Contributors: pankajpragma
 Tags: migrate, page, move, one click, rhd, migration, rhd migration
 Requires at least: 5.0.1
 Tested up to: 6.0.2
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 Requires PHP: 5.2.4
 License: GPLv2 or later
 
@@ -54,7 +54,16 @@ On the WordPress dashboard, go to Settings → Permalinks Screen. You can choose
 = 1.0.0 =
 *Just released into the wild.
 
+= 1.0.1 =
+*Multiple Destination URL Support.
+*Overwrite the default setting during the migration
+*Added Debugging Help Tab
 
 == Changelog ==
 = 1.0.0 =
 * Initial release
+
+= 1.0.1 =
+*Multiple Destination URL Support.
+*Overwrite the default setting during the migration
+*Added Debugging Help Tab

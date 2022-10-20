@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       RHD Migration Posts, Pages & Custom Post Types
  * Description:       Migrate the content of pages, posts, or custom post types from one WordPress to another WordPress. If you want to migrate post/page content from the stage to the multiple production server, this plugin will be your best choice. 
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            Pankaj Dadure
  * Author URI:        http://www.pragmasoftwares.com/
  * License:           GPL-2.0+
@@ -16,7 +16,7 @@ if (!defined('WPINC')) {
     die;
 }
 global $wpdb;
-define('RHD_VERSION', '1.0.0');
+define('RHD_VERSION', '1.0.1');
 
 /**
  * The code that runs during plugin activation.

@@ -205,8 +205,7 @@ $rhd_authors = $rhd_admin->get_rhd_authors();
             <h3><?php  esc_html_e( "Special Features:", 'rhd-migration' ); ?> </h3>
             <ul class="rhd-help-doc">
               <li><?php  esc_html_e( "Communicate with WordPress default API. So no special configuration is needed.", 'rhd-migration' ); ?></li>
-              <li><?php  esc_html_e( "Download Media Automatically.", 'rhd-migration' ); ?></li>
-              <li><?php esc_html_e( "Multiple Destination URL Support.", 'rhd-migration' ); ?></li>
+              <li><?php  esc_html_e( "Download Media Automatically.", 'rhd-migration' ); ?></li> 
               <li><?php esc_html_e( "Add/Update post/page data based on configuration", 'rhd-migration' ); ?></li>
               <li><?php  esc_html_e( "RTL Supported", 'rhd-migration' ); ?></li>        
               <li><?php  esc_html_e( "Comment Migration Supported", 'rhd-migration' ); ?></li>    

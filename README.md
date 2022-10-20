@@ -7,6 +7,12 @@ If your client wants to prepare the page/post in a staging environment and wants
 - Communicate with WordPress default API. So no special configuration is needed.
 - Download Media Automatically.
 - Add/Update post/page data based on configuration
+- RTL Supported
+- Comment Migration Supported
+- Media Exclude Supported
+- Multiple Destination Supported
+- Overwrite the default setting during the migration
+
 
 **More features will be added soon...**
 
